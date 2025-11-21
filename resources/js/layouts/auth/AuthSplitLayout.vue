@@ -4,8 +4,8 @@ import { home } from '@/routes';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
-const name = page.props.name;
 const quote = page.props.quote;
+const image = page.props.image;
 
 defineProps<{
     title?: string;
@@ -20,13 +20,15 @@ defineProps<{
         <div
             class="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r"
         >
-            <div class="absolute inset-0 bg-zinc-900" />
+            <div
+                class="absolute inset-0 bg-zinc-900 bg-cover bg-center bg-no-repeat opacity-90"
+                :style="{ backgroundImage: `url('${image}')` }"
+            />
             <Link
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"
             >
-                <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
-                {{ name }}
+                <AppLogoIcon class="mr-2 h-auto w-36 fill-current text-white" />
             </Link>
             <div v-if="quote" class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">

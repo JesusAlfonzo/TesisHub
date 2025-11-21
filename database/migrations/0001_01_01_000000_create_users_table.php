@@ -11,12 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('carreras', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre'); // Ej: "Informatica", "Administración", etc
+            $table->string('codigo')->unique(); // Ej: "INF-2025"
+            $table->timestamps();
+        });
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            $table->foreignId('carrera_id')->nullable()->constrained('carreras')->nullOnDelete();
+            $table->string('cedula')->unique()->nullable();
+            $table->boolean('is_active')->default(true);
+
             $table->rememberToken();
             $table->timestamps();
         });
@@ -43,6 +55,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
+        Schema::dropIfExists('carreras');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

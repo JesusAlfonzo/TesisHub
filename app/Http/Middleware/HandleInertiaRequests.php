@@ -35,17 +35,22 @@ class HandleInertiaRequests extends Middleware
      * @return array<string, mixed>
      */
     public function share(Request $request): array
-    {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+{
+    return array_merge(parent::share($request), [
+        'auth' => [
+            'user' => $request->user(),
 
-        return [
-            ...parent::share($request),
-            'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'auth' => [
-                'user' => $request->user(),
-            ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-        ];
-    }
+            // --- AGREGA ESTO ---
+            // Enviamos los NOMBRES de los roles y permisos al frontend
+            'roles' => $request->user()
+                ? $request->user()->getRoleNames()
+                : [],
+
+            'permissions' => $request->user()
+                ? $request->user()->getAllPermissions()->pluck('name')
+                : [],
+            // -------------------
+        ],
+    ]);
+}
 }
