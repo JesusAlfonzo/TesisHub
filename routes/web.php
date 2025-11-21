@@ -5,10 +5,14 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\TesisController;
 use App\Http\Controllers\MiTesisController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\ReporteController;
 
-// 
-// 1. Rutas publicas
-// 
+// ==============================================================================
+// 1. RUTAS PÚBLICAS
+// ==============================================================================
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -16,16 +20,17 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// 
-// 2. Rutas de autenticacion
-// 
+// ==============================================================================
+// 2. RUTAS DE AUTENTICACIÓN
+// ==============================================================================
 
-// LOGIN
 Route::get('/login', function () {
-    return Inertia::render('Auth/Login', [
+    return Inertia::render('auth/Login', [
         'name' => config('app.name'),
         'image' => asset('images/auth/login.webp'),
         'canRegister' => Features::enabled(Features::registration()),
+        'canResetPassword' => Features::enabled(Features::resetPasswords()),
+        'status' => session('status'),
         'quote' => [
             'message' => 'La educación no cambia el mundo, cambia a las personas que van a cambiar el mundo.',
             'author' => 'Paulo Freire',
@@ -33,10 +38,9 @@ Route::get('/login', function () {
     ]);
 })->middleware(['guest'])->name('login');
 
-// REGISTER
 if (Features::enabled(Features::registration())) {
     Route::get('/register', function () {
-        return Inertia::render('Auth/Register', [
+        return Inertia::render('auth/Register', [
             'name' => config('app.name'),
             'image' => asset('images/auth/register.webp'),
             'quote' => [
@@ -47,32 +51,55 @@ if (Features::enabled(Features::registration())) {
     })->middleware(['guest'])->name('register');
 }
 
-// FORGOT PASSWORD
 Route::get('/forgot-password', function () {
-    return Inertia::render('Auth/ForgotPassword', [
+    return Inertia::render('auth/ForgotPassword', [
         'name' => config('app.name'),
+        'image' => asset('images/auth/register.webp'),
+        'status' => session('status'),
+        'quote' => [
+            'message' => 'El primer paso hacia la grandeza es la voluntad de intentarlo.',
+            'author' => 'Anónimo',
+        ],
     ]);
 })->middleware(['guest'])->name('password.request');
 
-// 
-// 3. Rutas Protegidas (Requieren Login)
-// 
+
+// ==============================================================================
+// 3. RUTAS PROTEGIDAS
+// ==============================================================================
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Dashboard Principal
-    Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    // Dashboard
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    // Repositorio de Tesis
+    // --- REPOSITORIO DE TESIS ---
     Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
 
-    // Modulo Estudiantes (mis tesis)
+    // --- MÓDULO ESTUDIANTE ---
     Route::resource('mis-tesis', MiTesisController::class)
         ->parameters(['mis-tesis' => 'tesis']);
 
-    // Aquí agregaremos luego las rutas de Estudiante, Tutor y Admin...
+    // 🚨 RUTA RECUPERADA: Ver archivo PDF de forma segura 🚨
+    // Esta ruta usa el método verArchivo para servir el PDF
+    Route::get('/tesis/ver/{tesis}', [MiTesisController::class, 'verArchivo'])
+        ->name('tesis.ver');
+
+    // --- MÓDULO ACADÉMICO / TUTOR ---
+    Route::middleware(['can:evaluar tesis'])->group(function () {
+        Route::get('/evaluaciones/pendientes', [EvaluacionController::class, 'index'])->name('evaluaciones.index');
+        Route::get('/evaluaciones/historial', [EvaluacionController::class, 'historial'])->name('evaluaciones.historial');
+        Route::patch('/evaluaciones/{tesis}', [EvaluacionController::class, 'update'])->name('evaluaciones.update');
+    });
+
+    // --- MÓDULO ADMINISTRACIÓN ---
+    Route::middleware(['can:gestionar usuarios'])->prefix('admin')->group(function () {
+        Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+        Route::patch('/usuarios/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
+        Route::resource('carreras', CarreraController::class)->except(['create', 'edit', 'show']);
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    });
 
 });
 

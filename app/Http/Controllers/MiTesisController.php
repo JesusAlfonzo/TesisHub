@@ -3,119 +3,163 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tesis;
-use App\Models\Carrera;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class MiTesisController extends Controller
 {
-    // 1. Listar Mis tesis
+    /**
+     * Muestra la lista de tesis del estudiante logeado.
+     */
     public function index()
     {
-        $misTesis = Tesis::where('user_id', Auth::id())
+        $tesis = Tesis::where('user_id', Auth::id())
             ->with('carrera')
-            ->latest()
+            ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('Estudiante/index', [
-            'tesis' => $misTesis
+            'tesis' => $tesis,
         ]);
     }
 
-    // 2. Mostrar formulario de creación
+    /**
+     * Muestra el formulario para crear una nueva tesis.
+     */
     public function create()
     {
+        // CORRECCIÓN: 'Estudiante/create' en minúscula
         return Inertia::render('Estudiante/create');
     }
 
-    // 3. Guardar la tesis
+    /**
+     * Almacena una nueva tesis.
+     */
     public function store(Request $request)
     {
         $request->validate([
             'titulo' => 'required|string|max:255',
             'resumen' => 'required|string',
             'carrera_id' => 'required|exists:carreras,id',
-            'archivo' => 'required|file|mimes:pdf|max:10240', // Max 10MB, solo PDF
+            'archivo' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ]);
 
-        // Subir archivo al disco 'public' carpeta 'tesis'
-        $path = $request->file('archivo')->store('tesis', 'public');
+        $filePath = $request->file('archivo')->store('tesis/estudiantes', 'public');
 
-        // Crear registro en BD
         Tesis::create([
             'user_id' => Auth::id(),
             'carrera_id' => $request->carrera_id,
             'titulo' => $request->titulo,
             'resumen' => $request->resumen,
-            'ruta_archivo' => $path,
+            'ruta_archivo' => $filePath,
             'estado' => 'pendiente',
         ]);
 
-        return redirect()->route('mis-tesis.index')->with('message', 'Tesis subida correctamente.');
+        return redirect()->route('mis-tesis.index')
+            ->with('success', 'Proyecto subido y enviado para revisión.');
     }
 
-    // 4. Mostrar formulario de edición
+    /**
+     * Muestra el formulario para editar la tesis.
+     */
     public function edit(Tesis $tesis)
     {
-        // Seguridad: Solo el dueño puede editar
-        if ($tesis->user_id !== Auth::id()) {
-            abort(403);
+        if ($tesis->user_id !== Auth::id() || $tesis->estado === 'aprobado') {
+            abort(403, 'No tienes permiso para editar este proyecto o ya ha sido aprobado.');
         }
 
-        // Regla de negocio: No editar si ya está aprobada
-        if ($tesis->estado === 'aprobado') {
-            return redirect()->back()->with('error', 'No puedes editar una tesis aprobada.');
-        }
-
+        // CORRECCIÓN: 'Estudiante/edit' en minúscula
         return Inertia::render('Estudiante/edit', [
-            'tesis' => $tesis
+            'tesis' => $tesis->load('carrera'),
         ]);
     }
 
-    // 5. Actualizar tesis
+    /**
+     * Actualiza la tesis.
+     */
     public function update(Request $request, Tesis $tesis)
     {
-        if ($tesis->user_id !== Auth::id()) abort(403);
+        if ($tesis->user_id !== Auth::id() || $tesis->estado === 'aprobado') {
+            abort(403);
+        }
 
         $request->validate([
             'titulo' => 'required|string|max:255',
             'resumen' => 'required|string',
             'carrera_id' => 'required|exists:carreras,id',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240',
+            'archivo' => 'nullable|file|mimes:pdf|max:10240', // Archivo opcional para actualizar
         ]);
 
-        $data = $request->only(['titulo', 'resumen', 'carrera_id']);
+        $tesis->titulo = $request->titulo;
+        $tesis->resumen = $request->resumen;
+        $tesis->carrera_id = $request->carrera_id;
 
-        // Si subió un archivo nuevo, borramos el viejo y subimos el nuevo
         if ($request->hasFile('archivo')) {
             if ($tesis->ruta_archivo) {
                 Storage::disk('public')->delete($tesis->ruta_archivo);
             }
-            $data['ruta_archivo'] = $request->file('archivo')->store('tesis', 'public');
+            $filePath = $request->file('archivo')->store('tesis/estudiantes', 'public');
+            $tesis->ruta_archivo = $filePath;
+
+            if ($tesis->estado === 'rechazado') {
+                $tesis->estado = 'pendiente';
+            }
         }
 
-        // Al editar, vuelve a estado pendiente para revisión
-        $data['estado'] = 'pendiente';
+        $tesis->save();
 
-        $tesis->update($data);
-
-        return redirect()->route('mis-tesis.index')->with('message', 'Tesis actualizada.');
+        return redirect()->route('mis-tesis.index')
+            ->with('success', 'Proyecto actualizado y enviado nuevamente para revisión.');
     }
 
-    // 6. Eliminar tesis
+    /**
+     * Elimina la tesis.
+     */
     public function destroy(Tesis $tesis)
     {
-        if ($tesis->user_id !== Auth::id()) abort(403);
+        if ($tesis->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-        // Borrar archivo físico
         if ($tesis->ruta_archivo) {
             Storage::disk('public')->delete($tesis->ruta_archivo);
         }
 
         $tesis->delete();
 
-        return redirect()->back()->with('message', 'Tesis eliminada.');
+        return redirect()->route('mis-tesis.index')
+            ->with('success', 'Proyecto eliminado correctamente.');
+    }
+
+    /**
+     * Sirve el archivo PDF de forma segura.
+     */
+    public function verArchivo(Tesis $tesis)
+    {
+        $user = Auth::user();
+
+        // POLÍTICA DE AUTORIZACIÓN: Permite acceso si el usuario cumple al menos UNA de estas condiciones:
+        $canAccess = $tesis->user_id === $user->id ||         // 1. Es el dueño (Estudiante)
+                     $user->hasPermissionTo('evaluar tesis') || // 2. Es Tutor o Coordinador
+                     $user->hasRole('super-admin');            // 3. Es Super Admin
+
+        if (!$canAccess) {
+            abort(403, 'No tienes permiso para ver este archivo.');
+        }
+
+        $filePath = $tesis->ruta_archivo;
+        $fileName = $tesis->titulo . '.pdf';
+
+        if (!Storage::disk('public')->exists($filePath)) {
+            return back()->with('error', 'El archivo no fue encontrado en el servidor.');
+        }
+
+        // Devolver el archivo como respuesta HTTP forzando la visualización inline
+        return Storage::disk('public')->response($filePath, $fileName, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
     }
 }

@@ -2,10 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Models\Carrera; // <--- IMPORTANTE: Agregar esta línea
+use App\Models\Carrera; // Importamos el modelo Carrera
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,20 +37,24 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
+            // Autenticación y Roles
             'auth' => [
                 'user' => $request->user(),
-                
-                'roles' => $request->user()
-                    ? $request->user()->getRoleNames()
-                    : [],
-
-                'permissions' => $request->user()
-                    ? $request->user()->getAllPermissions()->pluck('name')
-                    : [],
+                'roles' => $request->user() ? $request->user()->getRoleNames() : [],
+                'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
             ],
-            
+
+            // Datos Globales (Carreras para selects)
             'carreras' => fn () => Carrera::select('id', 'nombre')->get(),
-            // -----------------------------------------------
+
+            // --- FLASH MESSAGES (TOASTS) ---
+            // Aquí capturamos los mensajes que envían los controladores con ->with('message', '...')
+            'flash' => [
+                'message' => fn () => $request->session()->get('message'),
+                'error' => fn () => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
+            ],
+            // -------------------------------
         ]);
     }
 }

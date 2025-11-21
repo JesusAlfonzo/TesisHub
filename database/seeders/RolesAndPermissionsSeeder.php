@@ -14,13 +14,14 @@ class RolesAndPermissionsSeeder extends Seeder
         // 1. Limpiar caché de permisos (Vital para que Spatie reconozca cambios)
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        // Helper para crear permisos sin duplicados
         $createPermission = function ($name) {
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         };
 
-        // 
-        // 1. Permisos
-        // 
+        // =================================================================
+        // 1. DEFINICIÓN DE PERMISOS
+        // =================================================================
 
         // GRUPO: ESTUDIANTE
         $createPermission('crear tesis');
@@ -32,6 +33,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $createPermission('ver tesis asignadas');
         $createPermission('comentar tesis');
         $createPermission('aprobar defensa');
+        $createPermission('evaluar tesis'); // <-- ASEGURAMOS QUE ESTE PERMISO CRÍTICO EXISTA
 
         // GRUPO: COORDINADOR
         $createPermission('publicar tesis');
@@ -46,9 +48,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // GRUPO: PÚBLICO
         $createPermission('ver repositorio publico');
 
-        // 
-        // 2. Roles
-        // 
+        // =================================================================
+        // 2. CREACIÓN DE ROLES Y ASIGNACIÓN
+        // =================================================================
 
         // ROL: ESTUDIANTE
         $roleEstudiante = Role::firstOrCreate(['name' => 'estudiante', 'guard_name' => 'web']);
@@ -67,6 +69,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver tesis asignadas',
             'comentar tesis',
             'aprobar defensa',
+            'evaluar tesis', // <-- Asignamos al Tutor
         ]);
 
         // ROL: COORDINADOR
@@ -79,28 +82,28 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear usuarios',
             'editar usuarios',
             'desactivar usuarios',
+            'evaluar tesis', // <-- También lo asignamos al Coordinador (por si acaso)
         ]);
 
         // ROL: SUPER ADMIN
         $roleSuperAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
         $roleSuperAdmin->syncPermissions(Permission::all());
 
-        // 
-        // 3. Creacion de Super Admin
-        // 
+        // =================================================================
+        // 3. USUARIO SUPER ADMIN
+        // =================================================================
 
         $user = User::firstOrCreate(
-            ['email' => 'admin@iujo.edu.ve'], 
+            ['email' => 'admin@iujo.edu.ve'],
             [
                 'name' => 'Super Admin',
-                'password' => bcrypt('password'), 
+                'password' => bcrypt('password'),
                 'cedula' => '00000000',
                 'is_active' => true,
-                'carrera_id' => null, 
+                'carrera_id' => null,
             ]
         );
 
-        // Asignar rol solo si no lo tiene aún
         if (!$user->hasRole('super-admin')) {
             $user->assignRole($roleSuperAdmin);
         }
