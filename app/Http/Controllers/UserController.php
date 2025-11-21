@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\User; // <--- Aseguramos la importación
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    // 1. Listar Usuarios
+    // 1. Listar Usuarios (Índice)
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -24,7 +24,6 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Renderizamos la vista en Admin/Usuarios/index
         return Inertia::render('Admin/Usuarios/index', [
             'users' => $users,
             'filters' => $request->only(['search']),
@@ -34,16 +33,21 @@ class UserController extends Controller
     // 2. Cambiar estado (Activar/Desactivar)
     public function toggleStatus(User $user)
     {
-        // Evitar que el admin se desactive a sí mismo
+        // 1. Evitar que el admin se desactive a sí mismo
         if ($user->id === auth()->id()) {
             return back()->with('error', 'No puedes desactivar tu propia cuenta.');
         }
 
+        // 2. Ejecutar la actualización en la base de datos
+        // Usamos update([]) para un solo campo, invirtiendo el estado actual
+        $newStatus = !$user->is_active;
+
         $user->update([
-            'is_active' => !$user->is_active
+            'is_active' => $newStatus
         ]);
 
-        $status = $user->is_active ? 'activado' : 'desactivado';
-        return back()->with('message', "Usuario {$status} correctamente.");
+        // 3. Devolver mensaje basado en el nuevo estado
+        $status = $newStatus ? 'activado' : 'desactivado';
+        return back()->with('success', "Usuario {$status} correctamente.");
     }
 }

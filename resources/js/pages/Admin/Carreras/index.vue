@@ -5,31 +5,22 @@ import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Search, Trash2, Pencil, Plus, X } from 'lucide-vue-next';
+import { Search, Trash2, Pencil, X } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
-// @ts-ignore
-const route = window.route;
+import { route } from 'ziggy-js';
 
 const props = defineProps<{
     carreras: { data: Array<any>, links: Array<any> };
     filters: { search: string };
 }>();
 
-// --- Estado para Formulario (Crear/Editar) ---
+// --- Estado para Formulario (Solo Editar) ---
 const isEditing = ref(false);
-const showForm = ref(false);
 const form = useForm({
     id: null as number | null,
     nombre: '',
     codigo: '',
 });
-
-const openCreate = () => {
-    form.reset();
-    form.clearErrors();
-    isEditing.value = false;
-    showForm.value = true;
-};
 
 const openEdit = (carrera: any) => {
     form.clearErrors();
@@ -37,23 +28,26 @@ const openEdit = (carrera: any) => {
     form.nombre = carrera.nombre;
     form.codigo = carrera.codigo;
     isEditing.value = true;
-    showForm.value = true;
+};
+
+const closeEdit = () => {
+    isEditing.value = false;
+    form.reset();
 };
 
 const submit = () => {
-    if (isEditing.value && form.id) {
+    // Solo permitimos la actualización
+    if (form.id) {
+        // Ahora route() está disponible
         form.put(route('carreras.update', form.id), {
-            onSuccess: () => showForm.value = false
-        });
-    } else {
-        form.post(route('carreras.store'), {
-            onSuccess: () => showForm.value = false
+            onSuccess: () => closeEdit()
         });
     }
 };
 
 const deleteCarrera = (id: number) => {
-    if (confirm('¿Eliminar carrera? Esto podría afectar a usuarios asociados.')) {
+    if (confirm('⚠️ Atención: Eliminar una carrera es irreversible y dejará a los estudiantes sin referencia. ¿Desea continuar?')) {
+        // Ahora route() está disponible
         router.delete(route('carreras.destroy', id));
     }
 };
@@ -64,6 +58,7 @@ let timeout: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
+        // Ahora route() está disponible
         router.get(route('carreras.index'), { search: val }, { preserveState: true, replace: true });
     }, 300);
 });
@@ -78,41 +73,45 @@ watch(search, (val) => {
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">Carreras Universitarias</h1>
-                    <p class="text-muted-foreground">Administra la oferta académica del instituto.</p>
+                    <p class="text-muted-foreground">Administra la oferta académica del instituto (Solo Edición/Eliminación).</p>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <div class="relative w-full sm:w-64">
                         <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input v-model="search" placeholder="Buscar carrera..." class="pl-8" />
                     </div>
-                    <Button @click="openCreate" v-if="!showForm">
-                        <Plus class="h-4 w-4 mr-2" /> Nueva
-                    </Button>
                 </div>
             </div>
 
-            <!-- FORMULARIO INLINE (Aparece al crear/editar) -->
-            <div v-if="showForm" class="bg-muted/30 border rounded-xl p-6 animate-in fade-in slide-in-from-top-2">
+            <!-- FORMULARIO INLINE (Aparece solo para editar) -->
+            <div v-if="isEditing" class="bg-muted/30 border rounded-xl p-6 animate-in fade-in slide-in-from-top-2">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-lg">{{ isEditing ? 'Editar Carrera' : 'Nueva Carrera' }}</h3>
-                    <Button variant="ghost" size="icon" @click="showForm = false"><X class="h-4 w-4" /></Button>
+                    <h3 class="font-semibold text-lg">Editar Carrera: {{ form.nombre }}</h3>
+                    <Button variant="ghost" size="icon" @click="closeEdit"><X class="h-4 w-4" /></Button>
                 </div>
-                <form @submit.prevent="submit" class="grid gap-4 md:grid-cols-3 items-end">
-                    <div class="space-y-2">
+                <!-- 🚨 CORRECCIÓN FINAL DE DISEÑO: Usamos 4 columnas y controlamos el ancho de los botones 🚨 -->
+                <form @submit.prevent="submit" class="grid gap-4 md:grid-cols-4 items-end">
+
+                    <!-- Columna 1: Nombre (Toma 2/4 del espacio en escritorio) -->
+                    <div class="space-y-2 md:col-span-2">
                         <Label>Nombre de la Carrera</Label>
                         <Input v-model="form.nombre" placeholder="Ingeniería Informática" required />
                         <InputError :message="form.errors.nombre" />
                     </div>
+
+                    <!-- Columna 2: Código (Toma 1/4 del espacio) -->
                     <div class="space-y-2">
                         <Label>Código (Único)</Label>
                         <Input v-model="form.codigo" placeholder="INF-2024" required />
                         <InputError :message="form.errors.codigo" />
                     </div>
-                    <div class="flex gap-2">
-                        <Button type="submit" class="w-full" :disabled="form.processing">
-                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+
+                    <!-- Columna 3: Acciones (Toma 1/4 del espacio) -->
+                    <div class="flex gap-2 w-full">
+                        <Button type="submit" class="flex-1" :disabled="form.processing">
+                            Actualizar
                         </Button>
-                        <Button type="button" variant="outline" @click="showForm = false">Cancelar</Button>
+                        <Button type="button" variant="outline" @click="closeEdit" class="flex-1">Cancelar</Button>
                     </div>
                 </form>
             </div>

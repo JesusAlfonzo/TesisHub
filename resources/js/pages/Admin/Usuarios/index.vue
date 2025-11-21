@@ -5,8 +5,8 @@ import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, UserCog, Ban, CheckCircle } from 'lucide-vue-next';
-// @ts-ignore
-const route = window.route;
+// CORRECCIÓN: Importar la función route directamente.
+import { route } from 'ziggy-js';
 
 const props = defineProps<{
     users: { data: Array<any>, links: Array<any> };
@@ -20,6 +20,7 @@ let timeout: ReturnType<typeof setTimeout>;
 const updateSearch = (value: string) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
+        // Usamos la función route importada
         router.get(route('users.index'), { search: value }, { preserveState: true, replace: true });
     }, 300);
 };
@@ -30,6 +31,7 @@ watch(search, (val) => updateSearch(val));
 const toggleUser = (user: any) => {
     const action = user.is_active ? 'desactivar' : 'activar';
     if (confirm(`¿Estás seguro de ${action} al usuario ${user.name}?`)) {
+        // Usamos la función route importada
         router.patch(route('users.toggle', user.id));
     }
 };

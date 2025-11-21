@@ -76,13 +76,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- REPOSITORIO DE TESIS ---
     Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
+    // RUTA NUEVA PARA SHOW (Necesaria para los detalles)
+    Route::get('/tesis/{tesis}', [TesisController::class, 'show'])->name('tesis.show');
 
     // --- MÓDULO ESTUDIANTE ---
     Route::resource('mis-tesis', MiTesisController::class)
         ->parameters(['mis-tesis' => 'tesis']);
 
-    // 🚨 RUTA RECUPERADA: Ver archivo PDF de forma segura 🚨
-    // Esta ruta usa el método verArchivo para servir el PDF
+    // RUTA PARA VER PDF SEGURO (USADA POR ESTUDIANTE/TUTOR)
     Route::get('/tesis/ver/{tesis}', [MiTesisController::class, 'verArchivo'])
         ->name('tesis.ver');
 
