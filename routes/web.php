@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\TesisController;
+use App\Http\Controllers\MiTesisController;
+
+// 
+// 1. Rutas publicas
+// 
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -10,46 +16,64 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// 
+// 2. Rutas de autenticacion
+// 
 
-// --- RUTAS DE AUTENTICACIÓN (Login, Register, etc.) ---
-
-// Ruta para mostrar la vista de LOGIN
+// LOGIN
 Route::get('/login', function () {
-    return Inertia::render('auth/Login', [
+    return Inertia::render('Auth/Login', [
         'name' => config('app.name'),
-        'image' => asset('images/auth/login.webp'), // <-- IMAGEN PARA LOGIN
+        'image' => asset('images/auth/login.webp'),
         'canRegister' => Features::enabled(Features::registration()),
-        // Puedes añadir aquí el prop 'quote' si lo usas en tu layout
         'quote' => [
             'message' => 'La educación no cambia el mundo, cambia a las personas que van a cambiar el mundo.',
             'author' => 'Paulo Freire',
         ],
     ]);
-})->middleware(['guest'])->name('login'); // Asegúrate de que el nombre sea 'login'
+})->middleware(['guest'])->name('login');
 
-// Ruta para mostrar la vista de REGISTER (solo si está habilitada)
+// REGISTER
 if (Features::enabled(Features::registration())) {
     Route::get('/register', function () {
-        return Inertia::render('auth/Register', [
+        return Inertia::render('Auth/Register', [
             'name' => config('app.name'),
-            'image' => asset('images/auth/register.webp'), // <-- IMAGEN PARA REGISTER
+            'image' => asset('images/auth/register.webp'),
             'quote' => [
                 'message' => 'El primer paso hacia la grandeza es la voluntad de intentarlo.',
                 'author' => 'Anónimo',
             ],
         ]);
-    })->middleware(['guest'])->name('register'); // Asegúrate de que el nombre sea 'register'
+    })->middleware(['guest'])->name('register');
 }
 
-// Ruta para mostrar la vista de Forgot Password (si necesitas una imagen diferente)
+// FORGOT PASSWORD
 Route::get('/forgot-password', function () {
-    return Inertia::render('auth/ForgotPassword', [
+    return Inertia::render('Auth/ForgotPassword', [
         'name' => config('app.name'),
-        // 'image' => asset('images/auth/recovery.jpg'), // <-- IMAGEN PARA RECOVERY
     ]);
 })->middleware(['guest'])->name('password.request');
 
-require __DIR__.'/settings.php';
+// 
+// 3. Rutas Protegidas (Requieren Login)
+// 
+
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Dashboard Principal
+    Route::get('dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+
+    // Repositorio de Tesis
+    Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
+
+    // Modulo Estudiantes (mis tesis)
+    Route::resource('mis-tesis', MiTesisController::class)
+        ->parameters(['mis-tesis' => 'tesis']);
+
+    // Aquí agregaremos luego las rutas de Estudiante, Tutor y Admin...
+
+});
+
+require __DIR__ . '/settings.php';

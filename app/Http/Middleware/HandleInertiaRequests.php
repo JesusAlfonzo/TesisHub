@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\Carrera; // <--- IMPORTANTE: Agregar esta línea
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,22 +36,22 @@ class HandleInertiaRequests extends Middleware
      * @return array<string, mixed>
      */
     public function share(Request $request): array
-{
-    return array_merge(parent::share($request), [
-        'auth' => [
-            'user' => $request->user(),
+    {
+        return array_merge(parent::share($request), [
+            'auth' => [
+                'user' => $request->user(),
+                
+                'roles' => $request->user()
+                    ? $request->user()->getRoleNames()
+                    : [],
 
-            // --- AGREGA ESTO ---
-            // Enviamos los NOMBRES de los roles y permisos al frontend
-            'roles' => $request->user()
-                ? $request->user()->getRoleNames()
-                : [],
-
-            'permissions' => $request->user()
-                ? $request->user()->getAllPermissions()->pluck('name')
-                : [],
-            // -------------------
-        ],
-    ]);
-}
+                'permissions' => $request->user()
+                    ? $request->user()->getAllPermissions()->pluck('name')
+                    : [],
+            ],
+            
+            'carreras' => fn () => Carrera::select('id', 'nombre')->get(),
+            // -----------------------------------------------
+        ]);
+    }
 }
