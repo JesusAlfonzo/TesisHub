@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// CORRECCIÓN: Usamos 'Layouts' (Mayúscula) para coincidir con Create.vue que sí funciona
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
@@ -102,7 +101,7 @@ const deleteTesis = (id: number) => {
                                 </td>
                             </tr>
 
-                            <!-- Empty State -->
+                            <!-- Estado vacio -->
                             <tr v-if="tesis.length === 0">
                                 <td colspan="5" class="p-8 text-center text-muted-foreground">
                                     <div class="flex flex-col items-center justify-center gap-2">

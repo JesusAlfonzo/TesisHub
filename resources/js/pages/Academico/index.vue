@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, XCircle, Eye, User } from 'lucide-vue-next';
-// Importante: Importamos route de ziggy-js para que funcionen las rutas en el script
 import { route } from 'ziggy-js';
 
 defineProps<{

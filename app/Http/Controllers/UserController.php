@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // <--- Aseguramos la importación
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,7 +14,7 @@ class UserController extends Controller
         $search = $request->input('search');
 
         $users = User::query()
-            ->with(['roles', 'carrera']) // Traemos roles y carrera para la tabla
+            ->with(['roles', 'carrera'])
             ->when($search, function ($query, $search) {
                 $query->where('name', 'ilike', "%{$search}%")
                       ->orWhere('email', 'ilike', "%{$search}%")
@@ -39,7 +39,6 @@ class UserController extends Controller
         }
 
         // 2. Ejecutar la actualización en la base de datos
-        // Usamos update([]) para un solo campo, invirtiendo el estado actual
         $newStatus = !$user->is_active;
 
         $user->update([

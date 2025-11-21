@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Tesis;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Response; // Importamos Response
+use Illuminate\Support\Facades\Response;
 
 class TesisController extends Controller
 {
-    // ... (index method remains the same) ...
     public function index(Request $request)
     {
         // Capturamos los filtros de la URL
@@ -30,7 +29,7 @@ class TesisController extends Controller
         ]);
     }
 
-    // 🚨 NUEVO MÉTODO: Ver Detalles de Tesis (RF 3.2 Show) 🚨
+    // Ver Detalles de Tesis
     public function show(Tesis $tesis)
     {
         // 1. Política de Seguridad: Solo mostrar si está APROBADA

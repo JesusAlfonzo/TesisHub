@@ -30,7 +30,6 @@ class MiTesisController extends Controller
      */
     public function create()
     {
-        // CORRECCIÓN: 'Estudiante/create' en minúscula
         return Inertia::render('Estudiante/create');
     }
 
@@ -70,7 +69,6 @@ class MiTesisController extends Controller
             abort(403, 'No tienes permiso para editar este proyecto o ya ha sido aprobado.');
         }
 
-        // CORRECCIÓN: 'Estudiante/edit' en minúscula
         return Inertia::render('Estudiante/edit', [
             'tesis' => $tesis->load('carrera'),
         ]);
@@ -89,7 +87,7 @@ class MiTesisController extends Controller
             'titulo' => 'required|string|max:255',
             'resumen' => 'required|string',
             'carrera_id' => 'required|exists:carreras,id',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240', // Archivo opcional para actualizar
+            'archivo' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
         $tesis->titulo = $request->titulo;
@@ -140,14 +138,23 @@ class MiTesisController extends Controller
     {
         $user = Auth::user();
 
-        // POLÍTICA DE AUTORIZACIÓN: Permite acceso si el usuario cumple al menos UNA de estas condiciones:
-        $canAccess = $tesis->user_id === $user->id ||         // 1. Es el dueño (Estudiante)
-                     $user->hasPermissionTo('evaluar tesis') || // 2. Es Tutor o Coordinador
-                     $user->hasRole('super-admin');            // 3. Es Super Admin
+        // 1. Si la tesis está aprobada, CUALQUIER USUARIO AUTENTICADO tiene acceso.
+        $isPubliclyAvailable = $tesis->estado === 'aprobado';
+
+        // 2. Si el usuario es el dueño.
+        $isOwner = $tesis->user_id === $user->id;
+
+        // 3. Si el usuario es un evaluador (Tutor/Coordinador/Super-Admin).
+        $isEvaluator = $user->hasPermissionTo('evaluar tesis') || $user->hasRole('super-admin');
+
+        // Acceso permitido si cumple CUALQUIERA de las condiciones
+        $canAccess = $isPubliclyAvailable || $isOwner || $isEvaluator;
 
         if (!$canAccess) {
             abort(403, 'No tienes permiso para ver este archivo.');
         }
+
+        // --------------------------------------------------
 
         $filePath = $tesis->ruta_archivo;
         $fileName = $tesis->titulo . '.pdf';

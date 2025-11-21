@@ -10,9 +10,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\ReporteController;
 
-// ==============================================================================
-// 1. RUTAS PÚBLICAS
-// ==============================================================================
+//
+// 1. Rutas para todos
+//
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -20,9 +20,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// ==============================================================================
-// 2. RUTAS DE AUTENTICACIÓN
-// ==============================================================================
+//
+// 2. Rutas de autenticacion, imagenes de fondo y frases (quotes)
+//
 
 Route::get('/login', function () {
     return Inertia::render('auth/Login', [
@@ -64,9 +64,9 @@ Route::get('/forgot-password', function () {
 })->middleware(['guest'])->name('password.request');
 
 
-// ==============================================================================
-// 3. RUTAS PROTEGIDAS
-// ==============================================================================
+//
+// 3. Rutas protegidas
+//
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -74,34 +74,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
         ->name('dashboard');
 
-    // --- REPOSITORIO DE TESIS ---
+    // Repositorio de tesis
     Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
-    // RUTA NUEVA PARA SHOW (Necesaria para los detalles)
     Route::get('/tesis/{tesis}', [TesisController::class, 'show'])->name('tesis.show');
 
-    // --- MÓDULO ESTUDIANTE ---
+    // Modulo de estudiantes
     Route::resource('mis-tesis', MiTesisController::class)
         ->parameters(['mis-tesis' => 'tesis']);
 
-    // RUTA PARA VER PDF SEGURO (USADA POR ESTUDIANTE/TUTOR)
+    // Ver PDF
     Route::get('/tesis/ver/{tesis}', [MiTesisController::class, 'verArchivo'])
         ->name('tesis.ver');
 
-    // --- MÓDULO ACADÉMICO / TUTOR ---
+    // Modulo academico / tutor
     Route::middleware(['can:evaluar tesis'])->group(function () {
         Route::get('/evaluaciones/pendientes', [EvaluacionController::class, 'index'])->name('evaluaciones.index');
         Route::get('/evaluaciones/historial', [EvaluacionController::class, 'historial'])->name('evaluaciones.historial');
         Route::patch('/evaluaciones/{tesis}', [EvaluacionController::class, 'update'])->name('evaluaciones.update');
     });
 
-    // --- MÓDULO ADMINISTRACIÓN ---
+    // Modulo administrativo
     Route::middleware(['can:gestionar usuarios'])->prefix('admin')->group(function () {
         Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
         Route::patch('/usuarios/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
         Route::resource('carreras', CarreraController::class)->except(['create', 'edit', 'show']);
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     });
-
 });
 
 require __DIR__ . '/settings.php';

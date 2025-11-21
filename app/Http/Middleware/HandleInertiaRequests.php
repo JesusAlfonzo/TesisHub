@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Models\Carrera; // Importamos el modelo Carrera
+use App\Models\Carrera;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -47,7 +47,7 @@ class HandleInertiaRequests extends Middleware
             // Datos Globales (Carreras para selects)
             'carreras' => fn () => Carrera::select('id', 'nombre')->get(),
 
-            // --- FLASH MESSAGES (TOASTS) ---
+            // Toats
             // Aquí capturamos los mensajes que envían los controladores con ->with('message', '...')
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),

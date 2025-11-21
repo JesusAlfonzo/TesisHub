@@ -5,7 +5,6 @@ import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, UserCog, Ban, CheckCircle } from 'lucide-vue-next';
-// CORRECCIÓN: Importar la función route directamente.
 import { route } from 'ziggy-js';
 
 const props = defineProps<{
@@ -20,18 +19,15 @@ let timeout: ReturnType<typeof setTimeout>;
 const updateSearch = (value: string) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-        // Usamos la función route importada
         router.get(route('users.index'), { search: value }, { preserveState: true, replace: true });
     }, 300);
 };
 
 watch(search, (val) => updateSearch(val));
 
-// Función para cambiar estado
 const toggleUser = (user: any) => {
     const action = user.is_active ? 'desactivar' : 'activar';
     if (confirm(`¿Estás seguro de ${action} al usuario ${user.name}?`)) {
-        // Usamos la función route importada
         router.patch(route('users.toggle', user.id));
     }
 };
@@ -44,7 +40,7 @@ const getRoleBadge = (roles: any[]) => {
         case 'super-admin': return 'bg-purple-100 text-purple-800 border-purple-200';
         case 'coordinador': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
         case 'tutor': return 'bg-blue-100 text-blue-800 border-blue-200';
-        default: return 'bg-green-100 text-green-800 border-green-200'; // Estudiante
+        default: return 'bg-green-100 text-green-800 border-green-200';
     }
 };
 </script>

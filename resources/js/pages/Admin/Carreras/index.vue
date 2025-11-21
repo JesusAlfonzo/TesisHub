@@ -14,7 +14,7 @@ const props = defineProps<{
     filters: { search: string };
 }>();
 
-// --- Estado para Formulario (Solo Editar) ---
+// Formulario (Solo Editar)
 const isEditing = ref(false);
 const form = useForm({
     id: null as number | null,
@@ -36,9 +36,7 @@ const closeEdit = () => {
 };
 
 const submit = () => {
-    // Solo permitimos la actualización
     if (form.id) {
-        // Ahora route() está disponible
         form.put(route('carreras.update', form.id), {
             onSuccess: () => closeEdit()
         });
@@ -47,7 +45,6 @@ const submit = () => {
 
 const deleteCarrera = (id: number) => {
     if (confirm('⚠️ Atención: Eliminar una carrera es irreversible y dejará a los estudiantes sin referencia. ¿Desea continuar?')) {
-        // Ahora route() está disponible
         router.delete(route('carreras.destroy', id));
     }
 };
@@ -58,7 +55,6 @@ let timeout: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-        // Ahora route() está disponible
         router.get(route('carreras.index'), { search: val }, { preserveState: true, replace: true });
     }, 300);
 });
@@ -89,24 +85,23 @@ watch(search, (val) => {
                     <h3 class="font-semibold text-lg">Editar Carrera: {{ form.nombre }}</h3>
                     <Button variant="ghost" size="icon" @click="closeEdit"><X class="h-4 w-4" /></Button>
                 </div>
-                <!-- 🚨 CORRECCIÓN FINAL DE DISEÑO: Usamos 4 columnas y controlamos el ancho de los botones 🚨 -->
                 <form @submit.prevent="submit" class="grid gap-4 md:grid-cols-4 items-end">
 
-                    <!-- Columna 1: Nombre (Toma 2/4 del espacio en escritorio) -->
+                    <!-- Nombre -->
                     <div class="space-y-2 md:col-span-2">
                         <Label>Nombre de la Carrera</Label>
                         <Input v-model="form.nombre" placeholder="Ingeniería Informática" required />
                         <InputError :message="form.errors.nombre" />
                     </div>
 
-                    <!-- Columna 2: Código (Toma 1/4 del espacio) -->
+                    <!-- Codigo -->
                     <div class="space-y-2">
                         <Label>Código (Único)</Label>
                         <Input v-model="form.codigo" placeholder="INF-2024" required />
                         <InputError :message="form.errors.codigo" />
                     </div>
 
-                    <!-- Columna 3: Acciones (Toma 1/4 del espacio) -->
+                    <!-- Acciones -->
                     <div class="flex gap-2 w-full">
                         <Button type="submit" class="flex-1" :disabled="form.processing">
                             Actualizar

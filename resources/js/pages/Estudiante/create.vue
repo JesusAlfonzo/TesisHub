@@ -41,7 +41,6 @@ const submit = () => {
             form.reset();
         },
         onError: (errors) => {
-            // AQUÍ ESTÁ LA CLAVE: Si entra aquí, Laravel rechazó los datos
             console.error("❌ Error de Validación Backend:", errors);
             alert("El servidor rechazó la solicitud. Revisa la consola para ver los errores.");
         },
@@ -51,7 +50,7 @@ const submit = () => {
     });
 };
 
-// --- VALIDACIÓN DE ARCHIVO EN FRONTEND ---
+// Validacion de archivo en frontend
 const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];

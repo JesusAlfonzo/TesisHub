@@ -36,10 +36,8 @@ const form = useForm({
 });
 
 const submit = () => {
-    // Usamos el ID de la tesis para enviar la petición PUT
     form.post(route('mis-tesis.update', props.tesis.id), {
         forceFormData: true,
-        // Agregamos feedback en caso de error
         onError: (errors) => {
             console.error("Error al actualizar:", errors);
             alert("Error de validación. Revisa los campos obligatorios.");
@@ -47,7 +45,7 @@ const submit = () => {
     });
 };
 
-// --- VALIDACIÓN DE ARCHIVO EN FRONTEND ---
+// --- Validacion de archivo en frontend ---
 const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
@@ -97,7 +95,7 @@ const removeFile = () => {
                 <div class="flex items-center">
                     <AlertTriangle class="h-5 w-5 mr-3 flex-shrink-0" />
                     <p class="text-sm font-medium">
-                        Este proyecto fue **RECHAZADO**. Al guardar, se enviará la nueva versión a revisión.
+                        Este proyecto fue <strong>RECHAZADO</strong>. Al guardar, se enviará la nueva versión a revisión.
                     </p>
                 </div>
             </div>
@@ -151,7 +149,7 @@ const removeFile = () => {
                 <div class="space-y-2">
                     <Label for="archivo">Nuevo Documento PDF (Máx 10MB)</Label>
 
-                    <!-- Estado: Archivo Actual -->
+                    <!-- Archivo Actual -->
                     <div class="flex items-center justify-between p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-900/10 border-yellow-300 mb-2">
                         <div class="flex items-center gap-3 overflow-hidden">
                              <div class="h-10 w-10 rounded bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -167,7 +165,7 @@ const removeFile = () => {
                          </a>
                     </div>
 
-                    <!-- Input de Subida (Opcional) -->
+                    <!-- Input de Subida -->
                     <div
                         class="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-muted/50 transition-colors cursor-pointer relative bg-background/50"
                         :class="{ 'border-red-500 bg-red-50 dark:bg-red-900/10': form.errors.archivo }"

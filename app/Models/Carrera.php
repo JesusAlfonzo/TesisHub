@@ -16,14 +16,13 @@ class Carrera extends Model
         'codigo',
     ];
 
-    // --- CORRECCIÓN: Agregamos la relación que faltaba ---
     // Una Carrera tiene muchas Tesis
     public function tesis()
     {
         return $this->hasMany(Tesis::class);
     }
 
-    // Opcional: Relación con Usuarios (Estudiantes)
+    // Relación con Usuarios (Estudiantes)
     public function usuarios()
     {
         return $this->hasMany(User::class);

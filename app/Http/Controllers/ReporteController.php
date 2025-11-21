@@ -13,7 +13,6 @@ class ReporteController extends Controller
     public function index()
     {
         // 1. Estadísticas: Tesis por Carrera y Estado
-        // Esto nos dará algo como: { 'Informática': { aprobadas: 5, total: 10 }, ... }
         $stats = Carrera::withCount([
             'tesis as total',
             'tesis as aprobadas' => function ($query) {
@@ -27,7 +26,7 @@ class ReporteController extends Controller
         // 2. Listado de las últimas 50 tesis aprobadas para el reporte detallado
         $listado = Tesis::where('estado', 'aprobado')
             ->with(['autor', 'carrera'])
-            ->latest('updated_at') // Ordenadas por fecha de aprobación
+            ->latest('updated_at')
             ->take(50)
             ->get();
 

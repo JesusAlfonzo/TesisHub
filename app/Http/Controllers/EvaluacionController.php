@@ -12,23 +12,22 @@ class EvaluacionController extends Controller
     public function index()
     {
         $pendientes = Tesis::where('estado', 'pendiente')
-            ->with(['autor', 'carrera']) // Traemos datos del estudiante y carrera
+            ->with(['autor', 'carrera']) 
             ->latest()
             ->get();
 
-        // Usamos minúsculas para coincidir con tu estructura
         return Inertia::render('Academico/index', [
             'tesis' => $pendientes
         ]);
     }
 
-    // 2. Historial de Evaluaciones (NUEVO MÉTODO)
+    // 2. Historial de Evaluaciones
     public function historial()
     {
         // Traemos todo lo que NO sea pendiente (Aprobado o Rechazado)
         $historial = Tesis::where('estado', '!=', 'pendiente')
             ->with(['autor', 'carrera'])
-            ->latest('updated_at') // Ordenar por fecha de evaluación (actualización)
+            ->latest('updated_at')
             ->paginate(10);
 
         return Inertia::render('Academico/historial', [
@@ -41,7 +40,6 @@ class EvaluacionController extends Controller
     {
         $request->validate([
             'estado' => 'required|in:aprobado,rechazado',
-            // 'observacion' => 'required_if:estado,rechazado' // Podríamos agregar esto luego
         ]);
 
         $tesis->update([

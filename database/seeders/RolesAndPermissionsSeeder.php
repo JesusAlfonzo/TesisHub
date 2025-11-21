@@ -11,7 +11,7 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Limpiar caché de permisos (Vital para que Spatie reconozca cambios)
+        // 1. Limpiar caché de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Helper para crear permisos sin duplicados
@@ -19,40 +19,40 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         };
 
-        // =================================================================
-        // 1. DEFINICIÓN DE PERMISOS
-        // =================================================================
+        //
+        // 1. Permisos
+        //
 
-        // GRUPO: ESTUDIANTE
+        // Estudiantes
         $createPermission('crear tesis');
         $createPermission('ver mis tesis');
         $createPermission('editar tesis propia');
         $createPermission('eliminar tesis propia');
 
-        // GRUPO: DOCENTE/TUTOR
+        // Docente/Tutor
         $createPermission('ver tesis asignadas');
         $createPermission('comentar tesis');
         $createPermission('aprobar defensa');
-        $createPermission('evaluar tesis'); // <-- ASEGURAMOS QUE ESTE PERMISO CRÍTICO EXISTA
+        $createPermission('evaluar tesis');
 
-        // GRUPO: COORDINADOR
+        // Coordinador
         $createPermission('publicar tesis');
         $createPermission('ver metricas globales');
         $createPermission('descargar reportes');
 
-        // GESTIÓN DE USUARIOS
+        // Gestion de Usuarios
         $createPermission('crear usuarios');
         $createPermission('editar usuarios');
         $createPermission('desactivar usuarios');
 
-        // GRUPO: PÚBLICO
+        // Publico
         $createPermission('ver repositorio publico');
 
-        // =================================================================
-        // 2. CREACIÓN DE ROLES Y ASIGNACIÓN
-        // =================================================================
+        //
+        // 2. Roles y Asignacion
+        //
 
-        // ROL: ESTUDIANTE
+        // Estudiante
         $roleEstudiante = Role::firstOrCreate(['name' => 'estudiante', 'guard_name' => 'web']);
         $roleEstudiante->syncPermissions([
             'ver repositorio publico',
@@ -62,17 +62,17 @@ class RolesAndPermissionsSeeder extends Seeder
             'eliminar tesis propia',
         ]);
 
-        // ROL: TUTOR
+        // Docente/Tutor
         $roleTutor = Role::firstOrCreate(['name' => 'tutor', 'guard_name' => 'web']);
         $roleTutor->syncPermissions([
             'ver repositorio publico',
             'ver tesis asignadas',
             'comentar tesis',
             'aprobar defensa',
-            'evaluar tesis', // <-- Asignamos al Tutor
+            'evaluar tesis',
         ]);
 
-        // ROL: COORDINADOR
+        // Coordinador
         $roleCoordinador = Role::firstOrCreate(['name' => 'coordinador', 'guard_name' => 'web']);
         $roleCoordinador->syncPermissions([
             'ver repositorio publico',
@@ -82,16 +82,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear usuarios',
             'editar usuarios',
             'desactivar usuarios',
-            'evaluar tesis', // <-- También lo asignamos al Coordinador (por si acaso)
+            'evaluar tesis',
         ]);
 
-        // ROL: SUPER ADMIN
+        // Super Admin
         $roleSuperAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
         $roleSuperAdmin->syncPermissions(Permission::all());
 
-        // =================================================================
-        // 3. USUARIO SUPER ADMIN
-        // =================================================================
+        //
+        // 3. Creacion de Usuario Super Admin (Primer Usuario del sistema)
+        //
 
         $user = User::firstOrCreate(
             ['email' => 'admin@iujo.edu.ve'],

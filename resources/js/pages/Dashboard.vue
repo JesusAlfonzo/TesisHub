@@ -121,7 +121,7 @@ const isStudent = roles.includes('estudiante');
                 </div>
             </div>
 
-            <!-- Banner decorativo o informativo -->
+            <!-- Banner informativo -->
             <div class="min-h-[200px] rounded-xl border border-sidebar-border/50 bg-sidebar-accent/10 p-6 flex items-center justify-center text-muted-foreground">
                 <div class="text-center">
                     <p class="text-sm">Sistema de Gestión de Trabajos de Grado</p>

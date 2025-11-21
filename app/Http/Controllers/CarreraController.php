@@ -51,7 +51,6 @@ class CarreraController extends Controller
 
     public function destroy(Carrera $carrera)
     {
-        // Opcional: Validar si tiene usuarios/tesis asociados antes de borrar
         $carrera->delete();
         return redirect()->back()->with('message', 'Carrera eliminada.');
     }

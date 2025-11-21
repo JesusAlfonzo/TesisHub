@@ -21,7 +21,7 @@ const printReport = () => {
     <AppLayout :breadcrumbs="[{ title: 'Administración', href: '#' }, { title: 'Reportes', href: '/admin/reportes' }]">
         <div class="flex flex-col gap-6 p-4 print:p-0">
 
-            <!-- Header (Se oculta al imprimir si no es necesario, o se deja como título) -->
+            <!-- Header -->
             <div class="flex justify-between items-center print:hidden">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">Reportes y Métricas</h1>
@@ -33,7 +33,7 @@ const printReport = () => {
                 </Button>
             </div>
 
-            <!-- CONTENIDO DEL REPORTE (Lo que sale en el papel) -->
+            <!-- CONTENIDO DEL REPORTE -->
             <div class="bg-card border rounded-xl p-8 shadow-sm print:border-0 print:shadow-none print:p-0">
 
                 <!-- Encabezado del Documento -->
@@ -43,7 +43,7 @@ const printReport = () => {
                     <p class="text-sm text-muted-foreground mt-2">Generado el: {{ fecha }}</p>
                 </div>
 
-                <!-- Sección 1: Resumen Estadístico -->
+                <!-- Resumen Estadistico -->
                 <div class="mb-8">
                     <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
                         <FileBarChart class="h-5 w-5" /> Resumen por Carrera
@@ -70,7 +70,7 @@ const printReport = () => {
                     </div>
                 </div>
 
-                <!-- Sección 2: Últimas Publicaciones -->
+                <!-- Ultimas Publicaciones -->
                 <div>
                     <h4 class="text-lg font-bold mb-4">Últimas Tesis Aprobadas</h4>
                     <div class="rounded-md border overflow-hidden">

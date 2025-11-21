@@ -30,8 +30,8 @@ class DashboardController extends Controller
         // 2. Métricas para Tutores
         elseif ($user->hasRole('tutor')) {
             $stats = [
-                'asignadas' => Tesis::where('estado', 'pendiente')->count(), // Pendientes globales (o filtrar por asignación si existiera)
-                'evaluadas' => Tesis::where('estado', '!=', 'pendiente')->count(), // Historial básico
+                'asignadas' => Tesis::where('estado', 'pendiente')->count(),
+                'evaluadas' => Tesis::where('estado', '!=', 'pendiente')->count(),
             ];
         }
 
