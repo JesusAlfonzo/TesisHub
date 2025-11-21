@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'Americas/Caracas',
+    'timezone' => 'America/Caracas',
 
     /*
     |--------------------------------------------------------------------------
