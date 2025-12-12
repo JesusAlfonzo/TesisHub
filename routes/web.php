@@ -10,20 +10,21 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\ReporteController;
 
-//
-// 1. Rutas para todos
-//
-
+// 1. Rutas PÚBLICAS (Accesibles para todos)
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
 
-//
-// 2. Rutas de autenticacion, imagenes de fondo y frases (quotes)
-//
+// --- NUEVO: REPOSITORIO PÚBLICO ---
+// Estas rutas ahora están fuera del grupo 'auth'
+Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
+Route::get('/tesis/{tesis}', [TesisController::class, 'show'])->name('tesis.show');
+Route::get('/tesis/ver/{tesis}', [MiTesisController::class, 'verArchivo'])->name('tesis.ver');
+// ----------------------------------
 
+// 2. Rutas de Autenticación
 Route::get('/login', function () {
     return Inertia::render('auth/Login', [
         'name' => config('app.name'),
@@ -64,27 +65,13 @@ Route::get('/forgot-password', function () {
 })->middleware(['guest'])->name('password.request');
 
 
-//
-// 3. Rutas protegidas
-//
-
+// 3. Rutas PROTEGIDAS (Solo usuarios logueados)
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Dashboard
-    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
-        ->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
-    // Repositorio de tesis
-    Route::get('/tesis', [TesisController::class, 'index'])->name('tesis.index');
-    Route::get('/tesis/{tesis}', [TesisController::class, 'show'])->name('tesis.show');
-
-    // Modulo de estudiantes
-    Route::resource('mis-tesis', MiTesisController::class)
-        ->parameters(['mis-tesis' => 'tesis']);
-
-    // Ver PDF
-    Route::get('/tesis/ver/{tesis}', [MiTesisController::class, 'verArchivo'])
-        ->name('tesis.ver');
+    // Modulo de estudiantes (Gestión privada)
+    Route::resource('mis-tesis', MiTesisController::class)->parameters(['mis-tesis' => 'tesis']);
 
     // Modulo academico / tutor
     Route::middleware(['can:evaluar tesis'])->group(function () {

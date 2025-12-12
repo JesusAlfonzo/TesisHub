@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+import PublicLayout from '@/layouts/PublicLayout.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { FileText, User, GraduationCap, Calendar, Download, ExternalLink, ArrowL
 import { route } from 'ziggy-js';
 import { computed } from 'vue';
 
-// Definimos props permitiendo nulos en relaciones (autor/carrera)
+// Definimos props
 const props = defineProps<{
     tesis: {
         id: number;
@@ -16,18 +17,21 @@ const props = defineProps<{
         resumen: string;
         ruta_archivo: string | null;
         created_at: string;
-        autor?: { name: string; email?: string }; // Hacemos opcional
-        carrera?: { nombre: string; id: number }; // Hacemos opcional
+        autor?: { name: string; email?: string };
+        carrera?: { nombre: string; id: number };
     };
 }>();
 
-const breadcrumbs = [
-    { title: 'Repositorio', href: route('tesis.index') },
-    { title: 'Detalle del Proyecto', href: '#' },
-];
+const page = usePage();
 
-// CORRECCIÓN 1: Computed para la fecha
-// Usamos computed para evitar errores si created_at viniera corrupto
+// 1. LAYOUT DINÁMICO
+// Si hay usuario -> AppLayout (con Sidebar)
+// Si es visitante -> PublicLayout (solo Header)
+const layout = computed(() => {
+    return page.props.auth.user ? AppLayout : PublicLayout;
+});
+
+// 2. Computed para fecha segura
 const formattedDate = computed(() => {
     if (!props.tesis.created_at) return 'Fecha desconocida';
     return new Date(props.tesis.created_at).toLocaleDateString('es-ES', {
@@ -37,24 +41,26 @@ const formattedDate = computed(() => {
     });
 });
 
-// CORRECCIÓN 2: Función defensiva para iniciales
-// Si el nombre no existe, retorna "??" en lugar de romper la app
+// 3. Helpers
 const getInitials = (name?: string) => {
     if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 };
 
-// CORRECCIÓN 3: Helper para el nombre de carrera
 const nombreCarrera = computed(() => props.tesis.carrera?.nombre || 'General');
-
-// CORRECCIÓN 4: Helper para el nombre del autor
 const nombreAutor = computed(() => props.tesis.autor?.name || 'Autor Desconocido');
 </script>
 
 <template>
     <Head :title="tesis.titulo" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <component 
+        :is="layout" 
+        :breadcrumbs="[
+            { title: 'Repositorio', href: route('tesis.index') },
+            { title: 'Detalle del Proyecto', href: '#' },
+        ]"
+    >
         
         <main class="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500" id="main-content">
             
@@ -84,7 +90,7 @@ const nombreAutor = computed(() => props.tesis.autor?.name || 'Autor Desconocido
                             </Badge>
                         </div>
 
-                        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+                        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight text-balance">
                             {{ tesis.titulo }}
                         </h1>
 
@@ -104,8 +110,8 @@ const nombreAutor = computed(() => props.tesis.autor?.name || 'Autor Desconocido
                             <FileText class="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                             Resumen / Abstract
                         </h2>
-                        <div class="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed text-justify">
-                            <p class="whitespace-pre-line">{{ tesis.resumen }}</p>
+                        <div class="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed text-justify whitespace-pre-line">
+                            <p>{{ tesis.resumen }}</p>
                         </div>
                     </section>
 
@@ -186,5 +192,5 @@ const nombreAutor = computed(() => props.tesis.autor?.name || 'Autor Desconocido
 
             </div>
         </main>
-    </AppLayout>
+    </component>
 </template>

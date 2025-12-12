@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
+import PublicLayout from '@/layouts/PublicLayout.vue';
 import { Head, router, usePage, Link } from '@inertiajs/vue3'; 
 import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Search, BookOpen, FileText, Calendar, Filter, ChevronDown, X } from 'lu
 import debounce from 'lodash/debounce';
 import { route } from 'ziggy-js';
 
+// --- PROPS ---
 const props = defineProps<{
     tesis: {
         data: Array<any>;
@@ -20,13 +22,19 @@ const props = defineProps<{
         carrera_id: string;
         year: string;
     };
+    carreras: Array<{ id: number; nombre: string }>;
 }>();
 
 const page = usePage();
-// @ts-ignore
-const carreras = (page.props.carreras || []) as Array<{ id: number; nombre: string }>;
 
-// --- ESTADO ---
+// --- LAYOUT DINÁMICO ---
+// Si hay usuario logueado -> AppLayout (Sidebar)
+// Si es visitante -> PublicLayout (Header público)
+const layout = computed(() => {
+    return page.props.auth.user ? AppLayout : PublicLayout;
+});
+
+// --- ESTADO DE FILTROS ---
 const search = ref(props.filters.search || '');
 const carreraSeleccionada = ref(props.filters.carrera_id || '');
 const anioSeleccionado = ref(props.filters.year || '');
@@ -41,7 +49,7 @@ const years = computed(() => {
     return yearsList;
 });
 
-// --- LÓGICA DE FILTRADO ---
+// --- LÓGICA DE BÚSQUEDA ---
 const applyFilters = debounce(() => {
     router.get(route('tesis.index'), { 
         search: search.value, 
@@ -54,7 +62,6 @@ const applyFilters = debounce(() => {
     });
 }, 300);
 
-// Watch unificado
 watch([search, carreraSeleccionada, anioSeleccionado], () => {
     applyFilters();
 });
@@ -65,17 +72,18 @@ const clearFilters = () => {
     anioSeleccionado.value = '';
 };
 
+// --- UTILIDADES ---
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 
 const getColorCarrera = (id: number) => {
     const colors = [
-        'bg-blue-700 text-white border-blue-800', 
-        'bg-emerald-700 text-white border-emerald-800', 
-        'bg-purple-700 text-white border-purple-800', 
-        'bg-orange-700 text-white border-orange-800', 
-        'bg-pink-700 text-white border-pink-800'
+        'bg-blue-700 text-white border-blue-800 hover:bg-blue-800', 
+        'bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800', 
+        'bg-purple-700 text-white border-purple-800 hover:bg-purple-800', 
+        'bg-orange-700 text-white border-orange-800 hover:bg-orange-800', 
+        'bg-pink-700 text-white border-pink-800 hover:bg-pink-800'
     ];
     return colors[id % colors.length] || 'bg-slate-700 text-white border-slate-800';
 };
@@ -84,9 +92,9 @@ const getColorCarrera = (id: number) => {
 <template>
     <Head title="Repositorio de Tesis" />
 
-    <AppLayout :breadcrumbs="[{ title: 'Repositorio Académico', href: '/tesis' }]">
+    <component :is="layout" :breadcrumbs="[{ title: 'Repositorio Académico', href: '/tesis' }]">
         
-        <main class="flex flex-col gap-6 p-4 md:p-8 w-full max-w-full overflow-hidden">
+        <main class="flex flex-col gap-6 p-4 md:p-8 w-full max-w-full overflow-hidden animate-in fade-in duration-500 max-w-7xl mx-auto">
             
             <section 
                 aria-label="Filtros de búsqueda" 
@@ -95,7 +103,7 @@ const getColorCarrera = (id: number) => {
             >
                 <div class="space-y-1">
                     <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Repositorio Digital</h1>
-                    <p class="text-sm text-muted-foreground">Explora, filtra y descarga las investigaciones aprobadas.</p>
+                    <p class="text-sm text-muted-foreground">Explora, filtra y descarga las investigaciones aprobadas por la institución.</p>
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-4 w-full md:items-end">
@@ -131,7 +139,7 @@ const getColorCarrera = (id: number) => {
                                 class="flex h-11 w-full items-center justify-between rounded-md border border-input bg-background pl-9 pr-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-foreground truncate cursor-pointer"
                             >
                                 <option value="">Todas las carreras</option>
-                                <option v-for="carrera in carreras" :key="carrera.id" :value="carrera.id">
+                                <option v-for="carrera in props.carreras" :key="carrera.id" :value="carrera.id">
                                     {{ carrera.nombre }}
                                 </option>
                             </select>
@@ -139,7 +147,7 @@ const getColorCarrera = (id: number) => {
                         </div>
                     </div>
 
-                    <div class="w-full md:w-[180px] space-y-2">
+                    <div class="w-full md:w-[150px] space-y-2">
                         <label for="year-select" class="text-xs font-medium text-muted-foreground ml-1">
                             Año Publicación
                         </label>
@@ -150,7 +158,7 @@ const getColorCarrera = (id: number) => {
                                 v-model="anioSeleccionado"
                                 class="flex h-11 w-full items-center justify-between rounded-md border border-input bg-background pl-9 pr-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-foreground truncate cursor-pointer"
                             >
-                                <option value="">Todos los años</option>
+                                <option value="">Todos</option>
                                 <option v-for="year in years" :key="year" :value="year">
                                     {{ year }}
                                 </option>
@@ -194,10 +202,10 @@ const getColorCarrera = (id: number) => {
                                     
                                     <div class="flex items-center gap-3 pt-4 border-t mt-auto">
                                         <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0" aria-hidden="true">
-                                            {{ item.autor?.name.charAt(0) || '?' }}
+                                            {{ item.autor?.name.charAt(0) }}
                                         </div>
                                         <div class="flex flex-col min-w-0">
-                                            <span class="text-sm font-medium truncate w-full text-foreground">{{ item.autor?.name || 'Anónimo' }}</span>
+                                            <span class="text-sm font-medium truncate w-full text-foreground">{{ item.autor?.name }}</span>
                                             <span class="text-xs text-muted-foreground">Autor(a)</span>
                                         </div>
                                     </div>
@@ -231,5 +239,5 @@ const getColorCarrera = (id: number) => {
             </section>
 
         </main>
-    </AppLayout>
+    </component>
 </template>

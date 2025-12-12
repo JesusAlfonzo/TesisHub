@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tesis;
-use App\Models\Carrera; // IMPORTANTE: Agregado para los selectores
+use App\Models\Carrera;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str; // Necesario para limpiar el nombre del archivo
 
 class MiTesisController extends Controller
 {
@@ -31,7 +32,6 @@ class MiTesisController extends Controller
      */
     public function create()
     {
-        // Pasamos las carreras para llenar el <select> del formulario
         $carreras = Carrera::orderBy('nombre')->get();
 
         return Inertia::render('Estudiante/create', [
@@ -75,12 +75,11 @@ class MiTesisController extends Controller
             abort(403, 'No tienes permiso para editar este proyecto o ya ha sido aprobado.');
         }
 
-        // Necesitamos las carreras para el select
         $carreras = Carrera::orderBy('nombre')->get();
 
         return Inertia::render('Estudiante/edit', [
             'tesis' => $tesis->load('carrera'),
-            'carreras' => $carreras, // Agregado
+            'carreras' => $carreras,
         ]);
     }
 
@@ -105,7 +104,6 @@ class MiTesisController extends Controller
         $tesis->carrera_id = $request->carrera_id;
 
         if ($request->hasFile('archivo')) {
-            // Borrar archivo anterior si existe
             if ($tesis->ruta_archivo && Storage::disk('public')->exists($tesis->ruta_archivo)) {
                 Storage::disk('public')->delete($tesis->ruta_archivo);
             }
@@ -113,7 +111,6 @@ class MiTesisController extends Controller
             $filePath = $request->file('archivo')->store('tesis/estudiantes', 'public');
             $tesis->ruta_archivo = $filePath;
 
-            // Si fue rechazado y sube uno nuevo, vuelve a pendiente
             if ($tesis->estado === 'rechazado') {
                 $tesis->estado = 'pendiente';
             }
@@ -145,42 +142,46 @@ class MiTesisController extends Controller
     }
 
     /**
-     * Sirve el archivo PDF de forma segura (Control de Acceso Completo).
+     * Sirve el archivo PDF de forma segura.
+     * Corrige el error 500 y maneja permisos públicos/privados.
      */
     public function verArchivo(Tesis $tesis)
     {
         $user = Auth::user();
 
-        // 1. ¿Es tesis pública (aprobada)?
+        // 1. Permisos
         $isPubliclyAvailable = $tesis->estado === 'aprobado';
+        
+        // Verificaciones que requieren usuario logueado
+        $isOwner = $user && ($tesis->user_id === $user->id);
+        
+        // Verificamos si tiene el permiso o rol (de manera segura si $user es null)
+        $isEvaluator = $user && ($user->can('evaluar tesis') || ($user->hasRole && $user->hasRole('super-admin')));
 
-        // 2. ¿Es el dueño?
-        $isOwner = $tesis->user_id === $user->id;
-
-        // 3. ¿Es evaluador? (Usamos 'can' para consistencia con Laravel Gates)
-        // Esto cubre Tutores y Admins si el Gate está definido correctamente
-        $isEvaluator = $user->can('evaluar tesis') || ($user->hasRole && $user->hasRole('super-admin'));
-
-        // Permitir acceso si cumple ALGUNA condición
+        // ¿Puede acceder?
         $canAccess = $isPubliclyAvailable || $isOwner || $isEvaluator;
 
         if (!$canAccess) {
-            abort(403, 'No tienes permiso para ver este archivo.');
+            // Si es un invitado intentando ver algo privado, mandarlo al login
+            if (!$user) {
+                return redirect()->route('login');
+            }
+            abort(403, 'No tienes permiso para ver este documento.');
         }
 
-        // --------------------------------------------------
-
+        // 2. Verificar existencia del archivo
         $filePath = $tesis->ruta_archivo;
         
         if (!Storage::disk('public')->exists($filePath)) {
-            return back()->with('error', 'El archivo no fue encontrado en el servidor.');
+            abort(404, 'El archivo físico no se encuentra en el servidor.');
         }
 
-        // Limpiamos el nombre para evitar errores en la descarga
-        $fileName = \Str::slug($tesis->titulo) . '.pdf';
+        // 3. Servir el archivo (CORREGIDO)
+        // Usamos response()->file() que es lo estándar para PDFs inline
+        $fullPath = storage_path('app/public/' . $filePath);
+        $fileName = Str::slug($tesis->titulo) . '.pdf';
 
-        // Devolver el archivo inline (visualización en navegador)
-        return response()->file(storage_path('app/public/' . $filePath), [
+        return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);

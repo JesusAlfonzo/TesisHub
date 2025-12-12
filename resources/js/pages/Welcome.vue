@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { dashboard, login, register } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Button } from '@/components/ui/button';
+import AccessibilityMenu from '@/components/AccessibilityMenu.vue';
+import { route } from 'ziggy-js';
+
+import { ArrowRight, Search, UploadCloud, BookOpen } from 'lucide-vue-next';
 
 withDefaults(
     defineProps<{
@@ -14,128 +18,136 @@ withDefaults(
 </script>
 
 <template>
-    <Head title="Bienvenido - Repositorio de Tesis IUJO">
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-    </Head>
+    <AccessibilityMenu />
 
-    <div
-        class="relative min-h-screen flex flex-col items-center justify-center p-6 text-[#1b1b18] lg:p-8 dark:text-[#EDEDEC]"
-    >
-        <div
-            class="absolute inset-0 z-0 bg-cover bg-center"
-            style="background-image: url('/images/auth/login.webp');"
-        >
-            <div class="absolute inset-0 bg-white/60 backdrop-blur-sm dark:bg-black/60"></div>
+    <Head title="Bienvenido - Repositorio de Tesis IUJO" />
+
+    <div class="relative min-h-screen flex flex-col font-sans selection:bg-primary selection:text-primary-foreground">
+
+        <div class="fixed inset-0 -z-10">
+            <div class="absolute inset-0 bg-cover bg-center opacity-20 dark:opacity-10"
+                style="background-image: url('/images/auth/login.webp');"></div>
+
+            <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20"></div>
+
+            <svg class="absolute inset-0 h-full w-full stroke-gray-200 dark:stroke-white/5 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
+                aria-hidden="true">
+                <defs>
+                    <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M0 40L40 0H20L0 20M40 40V20L20 40" stroke-width="1" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" stroke-width="0" fill="url(#grid-pattern)" />
+            </svg>
         </div>
 
-        <header
-            class="z-10 mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl"
-        >
-            <nav class="flex items-center justify-end gap-4">
-                <Link
-                    v-if="$page.props.auth.user"
-                    :href="dashboard()"
-                    class="inline-block rounded-sm border px-5 py-1.5 text-sm leading-normal text-gray-900 border-gray-900/50 hover:border-gray-900/75 dark:text-white dark:border-white/50 dark:hover:border-white/75"
-                >
-                    Dashboard
-                </Link>
-                <template v-else>
-                    <Link
-                        :href="login()"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-gray-900 hover:border-gray-900/50 dark:text-white dark:hover:border-white/50"
-                    >
-                        Iniciar Sesión
+        <header class="container mx-auto px-6 py-6 flex justify-between items-center z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-primary/10 p-2 rounded-lg backdrop-blur-sm border border-primary/20 text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-7 w-7">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                        <path d="M10 8h4" />
+                        <path d="M12 8v6" />
+                        <path d="M6.5 17H20" opacity="0.5" />
+                    </svg>
+                </div>
+                <span class="font-bold text-xl tracking-tight hidden sm:block">TesisHub IUJO</span>
+            </div>
+
+            <nav class="flex items-center gap-3">
+                <template v-if="$page.props.auth.user">
+                    <Link :href="dashboard()">
+                        <Button variant="outline" class="border-primary/20 hover:bg-primary/10">
+                            Ir al Dashboard
+                            <ArrowRight class="ml-2 h-4 w-4" />
+                        </Button>
                     </Link>
-                    <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="inline-block rounded-sm border px-5 py-1.5 text-sm leading-normal text-gray-900 border-gray-900/50 hover:border-gray-900/75 dark:text-white dark:border-white/50 dark:hover:border-white/75"
-                    >
-                        Registrarse
+                </template>
+                <template v-else>
+                    <Link :href="login()">
+                        <Button variant="ghost" class="hover:bg-primary/5">Iniciar Sesión</Button>
+                    </Link>
+                    <Link v-if="canRegister" :href="register()">
+                        <Button class="shadow-lg shadow-primary/20">Registrarse</Button>
                     </Link>
                 </template>
             </nav>
         </header>
 
-        <div
-            class="z-10 flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0"
-        >
-            <main
-                class="flex w-full max-w-[335px] flex-col-reverse overflow-hidden rounded-lg lg:max-w-4xl lg:flex-row"
-            >
-                <div
-                    class="flex-1 rounded-br-lg rounded-bl-lg bg-white bg-opacity-90 p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:bg-opacity-90 dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"
-                >
-                    <h1 class="mb-2 text-2xl font-bold dark:text-white">
-                        Repositorio de Tesis IUJO
-                    </h1>
-
-                    <p class="mb-4 text-base text-[#706f6c] dark:text-[#A1A09A]">
-                        Un espacio centralizado para descubrir, alojar y
-                        compartir el conocimiento generado en el Instituto
-                        Universitario Jesús Obrero.
-                    </p>
-
-                    <ul class="mb-4 flex flex-col lg:mb-6">
-                        <li
-                            class="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]"
-                        >
-                            <span
-                                class="relative bg-white bg-opacity-90 py-1 dark:bg-[#161615] dark:bg-opacity-90"
-                            >
-                                <span
-                                    class="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] bg-opacity-90 shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615] dark:bg-opacity-90"
-                                >
-                                    <span
-                                        class="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]"
-                                    />
-                                </span>
-                            </span>
-                            <span class="text-base">
-                                Explora trabajos de grado por carrera.
-                            </span>
-                        </li>
-                        <li
-                            class="relative flex items-center gap-4 py-2 before:absolute before:top-0 before:bottom-1/2 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]"
-                        >
-                            <span
-                                class="relative bg-white bg-opacity-90 py-1 dark:bg-[#161615] dark:bg-opacity-90"
-                            >
-                                <span
-                                    class="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] bg-opacity-90 shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615] dark:bg-opacity-90"
-                                >
-                                    <span
-                                        class="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]"
-                                    />
-                                </span>
-                            </span>
-                            <span class="text-base">
-                                Publica y gestiona tu investigación.
-                            </span>
-                        </li>
-                    </ul>
-
-                    <ul class="flex gap-3 text-sm leading-normal">
-                        <li>
-                            <Link
-                                :href="dashboard()"
-                                class="inline-block rounded-sm border border-black bg-[#1b1b18] px-5 py-1.5 text-sm leading-normal text-white hover:border-black hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:border-white dark:hover:bg-white"
-                            >
-                                Explorar Tesis
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
+        <main class="flex-grow flex items-center justify-center px-6 relative z-10">
+            <div class="max-w-4xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
                 <div
-                    class="relative flex items-center justify-center -mb-px aspect-335/376 w-full shrink-0 overflow-hidden rounded-t-lg bg-slate-100 bg-opacity-90 lg:mb-0 lg:-ml-px lg:aspect-auto lg:w-[438px] lg:rounded-t-none lg:rounded-r-lg dark:bg-zinc-900 dark:bg-opacity-90"
-                >
-                    <AppLogoIcon
-                        class="w-3/5 h-auto text-gray-800 dark:text-white opacity-40"
-                    />
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    Repositorio Digital Institucional
                 </div>
-            </main>
-        </div>
+
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-foreground text-balance">
+                    Descubre el conocimiento <br class="hidden sm:block" />
+                    <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600 dark:to-blue-400">
+                        que transforma el futuro
+                    </span>
+                </h1>
+
+                <p class="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-balance">
+                    Accede a la colección completa de trabajos de grado, investigaciones y proyectos académicos del
+                    Instituto
+                    Universitario Jesús Obrero.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                    <Link :href="route('tesis.index')">
+                        <Button size="lg" class="h-12 px-8 text-base shadow-xl shadow-primary/20 w-full sm:w-auto">
+                            <Search class="mr-2 h-5 w-5" /> Explorar Tesis
+                        </Button>
+                    </Link>
+
+                    <Link v-if="!$page.props.auth.user" :href="login()">
+                        <Button size="lg" variant="outline"
+                            class="h-12 px-8 text-base border-primary/20 hover:bg-primary/5 w-full sm:w-auto">
+                            <UploadCloud class="mr-2 h-5 w-5" /> Subir mi Proyecto
+                        </Button>
+                    </Link>
+                </div>
+
+                <div class="pt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto border-t border-border/50">
+                    <div class="flex flex-col items-center p-4 rounded-xl hover:bg-muted/50 transition-colors">
+                        <BookOpen class="h-6 w-6 text-primary mb-2 opacity-80" />
+                        <span class="font-bold text-2xl">Acceso Abierto</span>
+                        <span class="text-sm text-muted-foreground">Consulta pública</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 rounded-xl hover:bg-muted/50 transition-colors">
+                        <Search class="h-6 w-6 text-primary mb-2 opacity-80" />
+                        <span class="font-bold text-2xl">Búsqueda</span>
+                        <span class="text-sm text-muted-foreground">Filtros avanzados</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 rounded-xl hover:bg-muted/50 transition-colors">
+                        <UploadCloud class="h-6 w-6 text-primary mb-2 opacity-80" />
+                        <span class="font-bold text-2xl">Digitalización</span>
+                        <span class="text-sm text-muted-foreground">Gestión eficiente</span>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <footer class="py-6 text-center text-sm text-muted-foreground relative z-10">
+            <p>&copy; {{ new Date().getFullYear() }} Instituto Universitario Jesús Obrero. Todos los derechos
+                reservados.</p>
+        </footer>
     </div>
 </template>
+
+<style scoped>
+.text-balance {
+    text-wrap: balance;
+}
+</style>
