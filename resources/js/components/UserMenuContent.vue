@@ -17,6 +17,7 @@ interface Props {
 }
 
 const handleLogout = () => {
+    // Limpia el estado local de Inertia antes de salir
     router.flushAll();
 };
 
@@ -29,26 +30,35 @@ defineProps<Props>();
             <UserInfo :user="user" :show-email="true" />
         </div>
     </DropdownMenuLabel>
+    
     <DropdownMenuSeparator />
+    
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
-            <Link class="block w-full" :href="edit()" prefetch as="button">
-                <Settings class="mr-2 h-4 w-4" />
-                Settings
+            <Link 
+                class="flex w-full items-center cursor-pointer" 
+                :href="edit()" 
+                prefetch 
+            >
+                <Settings class="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                Configuración
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>
+    
     <DropdownMenuSeparator />
+    
     <DropdownMenuItem :as-child="true">
         <Link
-            class="block w-full"
+            class="flex w-full items-center cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:bg-red-900/10"
             :href="logout()"
-            @click="handleLogout"
+            method="post"
             as="button"
+            @click="handleLogout"
             data-test="logout-button"
         >
-            <LogOut class="mr-2 h-4 w-4" />
-            Log out
+            <LogOut class="mr-2 h-4 w-4" aria-hidden="true" />
+            Cerrar Sesión
         </Link>
     </DropdownMenuItem>
 </template>

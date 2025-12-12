@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Tesis extends Model
 {
@@ -12,40 +13,39 @@ class Tesis extends Model
     protected $table = 'tesis';
 
     protected $fillable = [
-        'titulo',
-        'resumen',
-        'ruta_archivo',
-        'estado', // 'pendiente', 'aprobado', 'rechazado'
-        'user_id',
-        'carrera_id',
+        'titulo', 'resumen', 'ruta_archivo', 'estado', 'user_id', 'carrera_id',
     ];
 
-    // Relación: Una tesis pertenece a un Autor (User)
-    public function autor()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
+    // --- RELACIONES ---
+    public function autor() { return $this->belongsTo(User::class, 'user_id'); }
+    public function carrera() { return $this->belongsTo(Carrera::class); }
 
-    // Relación: Una tesis pertenece a una Carrera
-    public function carrera()
-    {
-        return $this->belongsTo(Carrera::class);
-    }
+    // --- SCOPES (FILTROS) ---
 
-    // Scope para buscar fácil (Buscador)
-    public function scopeBuscar($query, $texto)
+    // 1. Buscador General
+    public function scopeBuscar(Builder $query, $texto)
     {
         if ($texto) {
-            return $query->where('titulo', 'ilike', "%$texto%") // ilike es case-insensitive en Postgres
-                         ->orWhere('resumen', 'ilike', "%$texto%");
+            return $query->where(function ($q) use ($texto) {
+                $q->where('titulo', 'like', "%{$texto}%")
+                  ->orWhere('resumen', 'like', "%{$texto}%");
+            });
         }
     }
     
-    // Scope para filtrar por carrera
-    public function scopePorCarrera($query, $carreraId)
+    // 2. Filtro por Carrera
+    public function scopePorCarrera(Builder $query, $carreraId)
     {
         if ($carreraId) {
             return $query->where('carrera_id', $carreraId);
+        }
+    }
+
+    // 3. NUEVO: Filtro por Año (Esto soluciona tu error 500)
+    public function scopePorAnio(Builder $query, $year)
+    {
+        if ($year) {
+            return $query->whereYear('created_at', $year);
         }
     }
 }

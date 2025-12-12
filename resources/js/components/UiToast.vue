@@ -6,69 +6,112 @@ import { CheckCircle, AlertCircle, X } from 'lucide-vue-next';
 const page = usePage();
 const show = ref(false);
 const message = ref('');
-const type = ref('success'); // 'success' | 'error'
+const type = ref('success');
+const title = ref('');
 
 let timeout: ReturnType<typeof setTimeout>;
 
-const showToast = (msg: string, toastType: 'success' | 'error' = 'success') => {
+const showToast = (msg: string, toastType: 'success' | 'error' | 'message' = 'success') => {
     message.value = msg;
     type.value = toastType;
+    
+    // Asignar título basado en el tipo
+    if (toastType === 'success') {
+        title.value = '¡Éxito!';
+    } else if (toastType === 'error') {
+        title.value = 'Error de Operación';
+    } else {
+        title.value = 'Información';
+    }
+    
     show.value = true;
-
     clearTimeout(timeout);
-    timeout = setTimeout(() => {
-        show.value = false;
-    }, 4000); // Se oculta a los 4 segundos
+    // Auto-cierre después de 5 segundos
+    timeout = setTimeout(() => { show.value = false; }, 5000);
 };
 
-// Escuchar cambios constantes en los mensajes flash de Inertia
+// Observar los mensajes flash inyectados por el middleware
 watch(() => page.props.flash, (flash: any) => {
-    if (flash?.message) {
-        showToast(flash.message, 'success');
-    } else if (flash?.error) {
-        showToast(flash.error, 'error');
-    } else if (flash?.success) { // Por si usas 'success' en el backend
-        showToast(flash.success, 'success');
-    }
+    if (flash?.success) showToast(flash.success, 'success');
+    else if (flash?.error) showToast(flash.error, 'error');
+    // Usamos 'message' como fallback genérico si existe
+    else if (flash?.message) showToast(flash.message, 'message');
 }, { deep: true });
 
-// Chequear si ya hay mensaje al cargar la página (ej: redirect después de login)
 onMounted(() => {
+    // Para el primer render
     // @ts-ignore
     const flash = page.props.flash;
-    if (flash?.message) showToast(flash.message, 'success');
+    if (flash?.success) showToast(flash.success, 'success');
     if (flash?.error) showToast(flash.error, 'error');
+    if (flash?.message) showToast(flash.message, 'message');
 });
+
+const closeToast = () => {
+    show.value = false;
+    clearTimeout(timeout);
+};
+
+// Helpers de estilo con alto contraste (WCAG AA)
+const styleClasses = {
+    success: 'bg-green-50 border-green-300 text-green-700 dark:bg-green-900 dark:border-green-800 dark:text-green-300',
+    error: 'bg-red-50 border-red-300 text-red-700 dark:bg-red-900 dark:border-red-800 dark:text-red-300',
+    message: 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900 dark:border-blue-800 dark:text-blue-300',
+    icon: {
+        success: 'text-green-500',
+        error: 'text-red-500',
+        message: 'text-blue-500',
+    }
+};
+
 </script>
 
 <template>
-    <transition
-        enter-active-class="transform ease-out duration-300 transition"
-        enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
-        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
-        leave-active-class="transition ease-in duration-100"
-        leave-from-class="opacity-100"
+    <!-- Contenedor principal para la transición y la posición fija -->
+    <transition 
+        enter-active-class="transform ease-out duration-300 transition" 
+        enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" 
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" 
+        leave-active-class="transition ease-in duration-100" 
+        leave-from-class="opacity-100" 
         leave-to-class="opacity-0"
     >
-        <div v-if="show" class="fixed top-4 right-4 z-50 w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 border dark:border-gray-700">
+        <div 
+            v-if="show" 
+            class="fixed top-4 right-4 z-50 w-full max-w-sm overflow-hidden rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 transition-all"
+            :class="[styleClasses[type]]"
+            role="alert" 
+            aria-live="assertive" 
+            tabindex="-1"
+        >
             <div class="p-4">
                 <div class="flex items-start">
+                    
+                    <!-- Icono -->
                     <div class="flex-shrink-0">
-                        <CheckCircle v-if="type === 'success'" class="h-6 w-6 text-green-500" />
-                        <AlertCircle v-else class="h-6 w-6 text-red-500" />
+                        <CheckCircle v-if="type === 'success' || type === 'message'" class="h-6 w-6" :class="styleClasses.icon[type]" aria-hidden="true" />
+                        <AlertCircle v-else class="h-6 w-6" :class="styleClasses.icon[type]" aria-hidden="true" />
                     </div>
+                    
+                    <!-- Contenido del Mensaje -->
                     <div class="ml-3 w-0 flex-1 pt-0.5">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ type === 'success' ? 'Operación Exitosa' : 'Error' }}
-                        </p>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            {{ message }}
-                        </p>
+                        <p class="text-sm font-medium">{{ title }}</p>
+                        <p class="mt-1 text-sm">{{ message }}</p>
                     </div>
+                    
+                    <!-- Botón de Cerrar Accesible -->
                     <div class="ml-4 flex flex-shrink-0">
-                        <button @click="show = false" type="button" class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-500 dark:hover:text-gray-400">
-                            <span class="sr-only">Cerrar</span>
-                            <X class="h-5 w-5" />
+                        <button 
+                            type="button"
+                            @click="closeToast" 
+                            class="inline-flex rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                            :class="[
+                                type === 'success' ? 'text-green-700 focus:ring-green-600' : 
+                                type === 'error' ? 'text-red-700 focus:ring-red-600' : 'text-blue-700 focus:ring-blue-600'
+                            ]"
+                            aria-label="Cerrar notificación"
+                        >
+                            <X class="h-5 w-5" aria-hidden="true" />
                         </button>
                     </div>
                 </div>

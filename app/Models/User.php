@@ -8,17 +8,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Builder; // Importante para el autocompletado
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -28,11 +24,6 @@ class User extends Authenticatable
         'is_active'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'two_factor_secret',
@@ -40,11 +31,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -55,8 +41,33 @@ class User extends Authenticatable
         ];
     }
 
+    // --- RELACIONES ---
     public function carrera()
     {
         return $this->belongsTo(Carrera::class);
+    }
+
+    // --- SCOPES (FILTROS) ---
+
+    // 1. Buscador General (Nombre, Email, Cédula)
+    public function scopeBuscar(Builder $query, $texto)
+    {
+        if ($texto) {
+            return $query->where(function ($q) use ($texto) {
+                // CAMBIO: Usamos 'like' para compatibilidad con MariaDB/MySQL
+                // 'ilike' es solo para PostgreSQL
+                $q->where('name', 'like', "%{$texto}%")
+                  ->orWhere('email', 'like', "%{$texto}%")
+                  ->orWhere('cedula', 'like', "%{$texto}%");
+            });
+        }
+    }
+
+    // 2. Filtro por Carrera
+    public function scopePorCarrera(Builder $query, $carreraId)
+    {
+        if ($carreraId) {
+            return $query->where('carrera_id', $carreraId);
+        }
     }
 }

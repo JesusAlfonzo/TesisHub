@@ -11,14 +11,15 @@ class TesisController extends Controller
 {
     public function index(Request $request)
     {
-        // Capturamos los filtros de la URL
-        $filters = $request->only(['search', 'carrera_id']);
+        // 1. Capturamos search, carrera_id Y AHORA year
+        $filters = $request->only(['search', 'carrera_id', 'year']);
 
         $tesis = Tesis::query()
             ->with(['autor', 'carrera'])
             ->where('estado', 'aprobado')
             ->buscar($request->input('search'))
             ->porCarrera($request->input('carrera_id'))
+            ->porAnio($request->input('year')) // <--- Nuevo Filtro
             ->latest()
             ->paginate(9)
             ->withQueryString();

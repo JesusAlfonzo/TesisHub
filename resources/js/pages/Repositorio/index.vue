@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, router, usePage, Link } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, router, usePage, Link } from '@inertiajs/vue3'; 
+import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, BookOpen, FileText, Calendar } from 'lucide-vue-next';
+import { Search, BookOpen, FileText, Calendar, Filter, ChevronDown, X } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 import { route } from 'ziggy-js';
 
@@ -18,6 +18,7 @@ const props = defineProps<{
     filters: {
         search: string;
         carrera_id: string;
+        year: string;
     };
 }>();
 
@@ -25,37 +26,58 @@ const page = usePage();
 // @ts-ignore
 const carreras = (page.props.carreras || []) as Array<{ id: number; nombre: string }>;
 
+// --- ESTADO ---
 const search = ref(props.filters.search || '');
 const carreraSeleccionada = ref(props.filters.carrera_id || '');
+const anioSeleccionado = ref(props.filters.year || '');
 
-const updateSearch = debounce((value) => {
-    router.get(route('tesis.index'), {
-        search: value,
-        carrera_id: carreraSeleccionada.value
-    }, {
-        preserveState: true,
-        replace: true
+// Generar últimos 10 años
+const years = computed(() => {
+    const currentYear = new Date().getFullYear();
+    const yearsList = [];
+    for (let i = 0; i <= 10; i++) {
+        yearsList.push(currentYear - i);
+    }
+    return yearsList;
+});
+
+// --- LÓGICA DE FILTRADO ---
+const applyFilters = debounce(() => {
+    router.get(route('tesis.index'), { 
+        search: search.value, 
+        carrera_id: carreraSeleccionada.value,
+        year: anioSeleccionado.value
+    }, { 
+        preserveState: true, 
+        replace: true, 
+        preserveScroll: true 
     });
 }, 300);
 
-watch(search, (value) => updateSearch(value));
-
-watch(carreraSeleccionada, (value) => {
-    router.get(route('tesis.index'), {
-        search: search.value,
-        carrera_id: value
-    }, {
-        preserveState: true
-    });
+// Watch unificado
+watch([search, carreraSeleccionada, anioSeleccionado], () => {
+    applyFilters();
 });
+
+const clearFilters = () => {
+    search.value = '';
+    carreraSeleccionada.value = '';
+    anioSeleccionado.value = '';
+};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 
 const getColorCarrera = (id: number) => {
-    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
-    return colors[id % colors.length] || 'bg-gray-500';
+    const colors = [
+        'bg-blue-700 text-white border-blue-800', 
+        'bg-emerald-700 text-white border-emerald-800', 
+        'bg-purple-700 text-white border-purple-800', 
+        'bg-orange-700 text-white border-orange-800', 
+        'bg-pink-700 text-white border-pink-800'
+    ];
+    return colors[id % colors.length] || 'bg-slate-700 text-white border-slate-800';
 };
 </script>
 
@@ -63,103 +85,151 @@ const getColorCarrera = (id: number) => {
     <Head title="Repositorio de Tesis" />
 
     <AppLayout :breadcrumbs="[{ title: 'Repositorio Académico', href: '/tesis' }]">
-        <div class="flex flex-col gap-6 p-4">
-
-            <!-- Header y filtros -->
-            <div class="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-sidebar-accent/20 p-6 rounded-xl border border-sidebar-border">
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Repositorio Digital</h1>
-                    <p class="text-muted-foreground">Explora las investigaciones aprobadas de nuestra comunidad.</p>
+        
+        <main class="flex flex-col gap-6 p-4 md:p-8 w-full max-w-full overflow-hidden">
+            
+            <section 
+                aria-label="Filtros de búsqueda" 
+                role="search"
+                class="flex flex-col gap-6 bg-sidebar-accent/20 p-6 rounded-xl border border-sidebar-border w-full shadow-sm"
+            >
+                <div class="space-y-1">
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Repositorio Digital</h1>
+                    <p class="text-sm text-muted-foreground">Explora, filtra y descarga las investigaciones aprobadas.</p>
                 </div>
-
-                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <!-- Buscador -->
-                    <div class="relative w-full md:w-64">
-                        <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            v-model="search"
-                            placeholder="Buscar por título..."
-                            class="pl-8 bg-background"
-                        />
+                
+                <div class="flex flex-col md:flex-row gap-4 w-full md:items-end">
+                    
+                    <div class="w-full md:flex-1 space-y-2">
+                        <label for="search-input" class="text-xs font-medium text-muted-foreground ml-1">
+                            Buscar por título
+                        </label>
+                        <div class="relative">
+                            <Search class="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+                            <Input 
+                                id="search-input"
+                                v-model="search" 
+                                placeholder="Escribe para buscar..." 
+                                class="pl-9 h-11 bg-background focus-visible:ring-2"
+                                type="search"
+                            />
+                            <button v-if="search" @click="search = ''" class="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
+                                <X class="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Filtro por Carrera -->
-                    <div class="relative w-full md:w-64">
-                        <select
-                            v-model="carreraSeleccionada"
-                            class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none dark:bg-gray-950"
-                        >
-                            <option value="">Todas las carreras</option>
-                            <option v-for="carrera in carreras" :key="carrera.id" :value="carrera.id">
-                                {{ carrera.nombre }}
-                            </option>
-                        </select>
-                         <span class="absolute right-3 top-3 pointer-events-none text-muted-foreground">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
-                        </span>
+                    <div class="w-full md:w-[280px] space-y-2">
+                        <label for="carrera-select" class="text-xs font-medium text-muted-foreground ml-1">
+                            Carrera
+                        </label>
+                        <div class="relative">
+                            <Filter class="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" aria-hidden="true" />
+                            <select 
+                                id="carrera-select"
+                                v-model="carreraSeleccionada"
+                                class="flex h-11 w-full items-center justify-between rounded-md border border-input bg-background pl-9 pr-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-foreground truncate cursor-pointer"
+                            >
+                                <option value="">Todas las carreras</option>
+                                <option v-for="carrera in carreras" :key="carrera.id" :value="carrera.id">
+                                    {{ carrera.nombre }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
                     </div>
+
+                    <div class="w-full md:w-[180px] space-y-2">
+                        <label for="year-select" class="text-xs font-medium text-muted-foreground ml-1">
+                            Año Publicación
+                        </label>
+                        <div class="relative">
+                            <Calendar class="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" aria-hidden="true" />
+                            <select 
+                                id="year-select"
+                                v-model="anioSeleccionado"
+                                class="flex h-11 w-full items-center justify-between rounded-md border border-input bg-background pl-9 pr-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-foreground truncate cursor-pointer"
+                            >
+                                <option value="">Todos los años</option>
+                                <option v-for="year in years" :key="year" :value="year">
+                                    {{ year }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+
                 </div>
-            </div>
+            </section>
 
-            <!-- Tesis -->
-            <div v-if="tesis.data.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card v-for="item in tesis.data" :key="item.id" class="flex flex-col hover:shadow-lg transition-shadow duration-200 dark:hover:border-primary/50">
-                    <CardHeader>
-                        <div class="flex justify-between items-start gap-2">
-                            <Badge :class="getColorCarrera(item.carrera_id)" class="hover:opacity-90">
-                                {{ item.carrera?.nombre || 'General' }}
-                            </Badge>
-                        </div>
-                        <CardTitle class="text-lg leading-tight mt-2 line-clamp-2" :title="item.titulo">
-                            {{ item.titulo }}
-                        </CardTitle>
-                        <div class="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <Calendar class="h-3 w-3" />
-                            <span>{{ formatDate(item.created_at) }}</span>
-                        </div>
-                    </CardHeader>
+            <section aria-label="Resultados de la búsqueda">
+                <ul v-if="tesis.data.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full list-none p-0 m-0">
+                    <li v-for="item in tesis.data" :key="item.id" class="h-full">
+                        <article class="h-full">
+                            <Card class="flex flex-col h-full hover:shadow-lg transition-all duration-200 hover:-translate-y-1 dark:hover:border-primary/50 overflow-hidden group border-muted">
+                                
+                                <CardHeader class="p-5 pb-3 space-y-3">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <Badge :class="getColorCarrera(item.carrera_id)" class="px-2.5 py-1 text-[11px] font-semibold shadow-sm truncate max-w-[90%] block border-0">
+                                            {{ item.carrera?.nombre || 'General' }}
+                                        </Badge>
+                                    </div>
+                                    
+                                    <CardTitle class="text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-3 min-h-[3.5rem]">
+                                        <Link :href="route('tesis.show', item.id)" class="focus-visible:underline outline-none">
+                                            {{ item.titulo }}
+                                        </Link>
+                                    </CardTitle>
+                                    
+                                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Calendar class="h-3.5 w-3.5" aria-hidden="true" />
+                                        <time :datetime="item.created_at">{{ formatDate(item.created_at) }}</time>
+                                    </div>
+                                </CardHeader>
+                                
+                                <CardContent class="flex-grow p-5 pt-0">
+                                    <p class="text-sm text-muted-foreground line-clamp-3 mb-4 h-[4.5em]">
+                                        {{ item.resumen }}
+                                    </p>
+                                    
+                                    <div class="flex items-center gap-3 pt-4 border-t mt-auto">
+                                        <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0" aria-hidden="true">
+                                            {{ item.autor?.name.charAt(0) || '?' }}
+                                        </div>
+                                        <div class="flex flex-col min-w-0">
+                                            <span class="text-sm font-medium truncate w-full text-foreground">{{ item.autor?.name || 'Anónimo' }}</span>
+                                            <span class="text-xs text-muted-foreground">Autor(a)</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
 
-                    <CardContent class="flex-grow">
-                        <p class="text-sm text-muted-foreground line-clamp-3">
-                            {{ item.resumen }}
-                        </p>
-                        <div class="mt-4 flex items-center gap-2">
-                            <div class="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {{ item.autor?.name.charAt(0) }}
-                            </div>
-                            <span class="text-sm font-medium">{{ item.autor?.name }}</span>
-                        </div>
-                    </CardContent>
+                                <CardFooter class="p-5 pt-0 mt-auto">
+                                    <Link :href="route('tesis.show', item.id)" class="w-full" tabindex="-1"> 
+                                        <Button class="w-full" variant="outline" :aria-hidden="true">
+                                            <BookOpen class="mr-2 h-4 w-4" />
+                                            Ver Detalles
+                                        </Button>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                        </article>
+                    </li>
+                </ul>
 
-                    <CardFooter class="pt-0">
-                        <Link :href="route('tesis.show', item.id)" class="w-full">
-                            <Button class="w-full" variant="outline">
-                                <BookOpen class="mr-2 h-4 w-4" />
-                                Ver Detalles
-                            </Button>
-                        </Link>
-                    </CardFooter>
-                </Card>
-            </div>
-
-            <!-- Estado vacio (por si no hay resultados) -->
-            <div v-else class="flex flex-col items-center justify-center py-12 text-center">
-                <div class="bg-muted/50 p-6 rounded-full mb-4">
-                    <FileText class="h-12 w-12 text-muted-foreground" />
+                <div v-else class="flex flex-col items-center justify-center py-16 text-center w-full border-2 border-dashed rounded-xl bg-muted/10 animate-in zoom-in-95">
+                    <div class="bg-muted/50 p-6 rounded-full mb-4">
+                        <FileText class="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground">No se encontraron tesis</h3>
+                    <p class="text-muted-foreground max-w-sm mt-2 px-4 text-sm">
+                        No hay resultados para "{{ search }}" con los filtros seleccionados.
+                    </p>
+                    <Button variant="link" class="mt-4 text-primary" @click="clearFilters">
+                        Limpiar todos los filtros
+                    </Button>
                 </div>
-                <h3 class="text-lg font-semibold">No se encontraron tesis</h3>
-                <p class="text-muted-foreground max-w-sm mt-2">
-                    Intenta ajustar los filtros de búsqueda o selecciona otra carrera.
-                </p>
-                <Button
-                    variant="link"
-                    class="mt-4"
-                    @click="search = ''; carreraSeleccionada = ''"
-                >
-                    Limpiar filtros
-                </Button>
-            </div>
+            </section>
 
-        </div>
+        </main>
     </AppLayout>
 </template>
