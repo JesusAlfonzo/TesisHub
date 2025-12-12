@@ -2,7 +2,8 @@
 import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItemType } from '@/types';
 import UiToast from '@/components/UiToast.vue';
-import { usePage } from '@inertiajs/vue3'; // 1. Importamos usePage
+import AccessibilityMenu from '@/components/AccessibilityMenu.vue';
+import { usePage } from '@inertiajs/vue3';
 
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
@@ -12,7 +13,8 @@ withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
 
-// 2. Obtenemos la instancia de la página para detectar cambios de URL
+// Obtenemos la instancia de la página para detectar cambios de URL
+// Esto sirve para reiniciar la animación cuando el usuario navega
 const page = usePage();
 </script>
 
@@ -24,5 +26,7 @@ const page = usePage();
         </div>
 
         <UiToast />
+        <AccessibilityMenu />
+        
     </AppLayout>
 </template>
