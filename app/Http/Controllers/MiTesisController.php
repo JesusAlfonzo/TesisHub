@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str; // Necesario para limpiar el nombre del archivo
+use Illuminate\Support\Str;
 
 class MiTesisController extends Controller
 {
@@ -107,7 +107,7 @@ class MiTesisController extends Controller
             if ($tesis->ruta_archivo && Storage::disk('public')->exists($tesis->ruta_archivo)) {
                 Storage::disk('public')->delete($tesis->ruta_archivo);
             }
-            
+
             $filePath = $request->file('archivo')->store('tesis/estudiantes', 'public');
             $tesis->ruta_archivo = $filePath;
 
@@ -151,10 +151,10 @@ class MiTesisController extends Controller
 
         // 1. Permisos
         $isPubliclyAvailable = $tesis->estado === 'aprobado';
-        
+
         // Verificaciones que requieren usuario logueado
         $isOwner = $user && ($tesis->user_id === $user->id);
-        
+
         // Verificamos si tiene el permiso o rol (de manera segura si $user es null)
         $isEvaluator = $user && ($user->can('evaluar tesis') || ($user->hasRole && $user->hasRole('super-admin')));
 
@@ -171,7 +171,7 @@ class MiTesisController extends Controller
 
         // 2. Verificar existencia del archivo
         $filePath = $tesis->ruta_archivo;
-        
+
         if (!Storage::disk('public')->exists($filePath)) {
             abort(404, 'El archivo físico no se encuentra en el servidor.');
         }

@@ -19,7 +19,7 @@ class TesisController extends Controller
             ->where('estado', 'aprobado')
             ->buscar($request->input('search'))
             ->porCarrera($request->input('carrera_id'))
-            ->porAnio($request->input('year')) // <--- Nuevo Filtro
+            ->porAnio($request->input('year'))
             ->latest()
             ->paginate(9)
             ->withQueryString();

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tesis;
-use App\Models\Carrera; // IMPORTANTE: Necesario para el dropdown de filtros
+use App\Models\Carrera;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -19,12 +19,11 @@ class EvaluacionController extends Controller
 
         // 2. Consulta principal
         $pendientes = Tesis::query()
-            ->with(['autor', 'carrera']) // Eager loading para rendimiento
-            ->where('estado', 'pendiente') // Solo lo que falta por revisar
-            
+            ->with(['autor', 'carrera'])
+            ->where('estado', 'pendiente')
+
             // --- APLICAMOS LOS SCOPES DEL MODELO ---
-            // Estos scopes ya los definiste en el modelo Tesis.php
-            ->buscar($request->input('search')) 
+            ->buscar($request->input('search'))
             ->porCarrera($request->input('carrera_id'))
             // ---------------------------------------
 
@@ -53,22 +52,21 @@ class EvaluacionController extends Controller
         $historial = Tesis::query()
             ->with(['autor', 'carrera'])
             ->where('estado', '!=', 'pendiente') // Trae 'aprobado' y 'rechazado'
-            
+
             // Filtros
             ->buscar($request->input('search'))
             ->porCarrera($request->input('carrera_id'))
-            
-            ->latest('updated_at') // Ordenar por fecha de EVALUACIÓN (última modificación)
+
+            ->latest('updated_at') // Ordenar por fecha de evaluación
             ->paginate(10)
             ->withQueryString();
 
-        // Opcional: Si quieres filtros en el historial, necesitas pasar las carreras también
         $carreras = Carrera::orderBy('nombre')->get(['id', 'nombre']);
 
         return Inertia::render('Academico/historial', [
             'tesis' => $historial,
             'filters' => $filters,
-            'carreras' => $carreras, 
+            'carreras' => $carreras,
         ]);
     }
 
@@ -90,6 +88,6 @@ class EvaluacionController extends Controller
         $mensaje = $request->estado === 'aprobado' ? 'Tesis aprobada correctamente.' : 'Tesis rechazada.';
 
         // Redirigimos a la ruta de pendientes para seguir evaluando
-        // Asegúrate de que 'evaluaciones.pendientes' sea el nombre correcto en tus routes/web.php
-        return redirect()->route('evaluaciones.index')->with('message', $mensaje);    }
+        return redirect()->route('evaluaciones.index')->with('message', $mensaje);
+    }
 }

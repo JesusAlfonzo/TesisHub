@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Carrera; // <--- AGREGADO: Necesario para el filtro
+use App\Models\Carrera;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,20 +13,20 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $carreraId = $request->input('carrera_id'); // <--- Capturamos el filtro
+        $carreraId = $request->input('carrera_id');
 
         $users = User::query()
             ->with(['roles', 'carrera'])
             // Filtro de Texto
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    // CAMBIO: Usamos 'like' para que no falle en tu base de datos
+
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('cedula', 'like', "%{$search}%");
                 });
             })
-            // Filtro de Carrera (Agregado directo aquí para no tocar el modelo)
+            // Filtro de Carrera
             ->when($carreraId, function ($query, $id) {
                 $query->where('carrera_id', $id);
             })
@@ -37,8 +37,6 @@ class UserController extends Controller
         // Obtenemos las carreras para llenar el select del frontend
         $carreras = Carrera::orderBy('nombre')->get(['id', 'nombre']);
 
-        // IMPORTANTE: Asegúrate que la ruta 'Admin/Usuarios/index' coincide 
-        // con la carpeta real de tu archivo .vue (puede ser 'Admin/Usuarios' si renombraste)
         return Inertia::render('Admin/Usuarios/index', [
             'users' => $users,
             'filters' => $request->only(['search', 'carrera_id']),
@@ -46,7 +44,7 @@ class UserController extends Controller
         ]);
     }
 
-    // 2. Cambiar estado (Activar/Desactivar) - ESTO QUEDA IGUAL
+    // 2. Cambiar estado (Activar/Desactivar)
     public function toggleStatus(User $user)
     {
         if ($user->id === auth()->id()) {
