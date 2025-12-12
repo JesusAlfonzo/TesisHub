@@ -41,7 +41,7 @@ class Tesis extends Model
         }
     }
 
-    // 3. NUEVO: Filtro por Año (Esto soluciona tu error 500)
+    // 3.Filtro por Año
     public function scopePorAnio(Builder $query, $year)
     {
         if ($year) {

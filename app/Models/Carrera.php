@@ -41,7 +41,6 @@ class Carrera extends Model
     {
         if ($texto) {
             return $query->where(function($q) use ($texto) {
-                // Usamos 'like' para compatibilidad MySQL/MariaDB
                 $q->where('nombre', 'like', "%{$texto}%")
                   ->orWhere('codigo', 'like', "%{$texto}%");
             });

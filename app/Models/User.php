@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Builder; // Importante para el autocompletado
+use Illuminate\Database\Eloquent\Builder;
 
 class User extends Authenticatable
 {
@@ -54,8 +54,6 @@ class User extends Authenticatable
     {
         if ($texto) {
             return $query->where(function ($q) use ($texto) {
-                // CAMBIO: Usamos 'like' para compatibilidad con MariaDB/MySQL
-                // 'ilike' es solo para PostgreSQL
                 $q->where('name', 'like', "%{$texto}%")
                   ->orWhere('email', 'like', "%{$texto}%")
                   ->orWhere('cedula', 'like', "%{$texto}%");
