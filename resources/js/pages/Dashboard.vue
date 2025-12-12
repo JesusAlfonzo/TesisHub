@@ -15,7 +15,6 @@ import {
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-// Definición de tipos para seguridad (Principio Robusto)
 interface User {
     name: string;
 }
@@ -133,7 +132,7 @@ const studentStatus = computed(() => {
                 </div>
 
                 <div v-else-if="isTutor" class="grid gap-4 md:grid-cols-2">
-                    <article class="rounded-xl border bg-card text-card-foreground shadow-sm p-6 border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10">
+                    <article class="rounded-xl border text-card-foreground shadow-sm p-6 border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10">
                         <div class="flex flex-row items-center justify-between space-y-0 pb-2">
                             <h3 class="tracking-tight text-sm font-medium text-foreground">Pendientes de Revisión</h3>
                             <Clock class="h-4 w-4 text-orange-600" aria-hidden="true" />

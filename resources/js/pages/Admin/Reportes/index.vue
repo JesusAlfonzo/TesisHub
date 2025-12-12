@@ -33,16 +33,19 @@ const printReport = () => {
 </script>
 
 <template>
+
     <Head title="Reportes del Sistema" />
 
     <AppLayout :breadcrumbs="[{ title: 'Administración', href: '#' }, { title: 'Reportes', href: '/admin/reportes' }]">
-        
-        <main id="print-area" class="flex flex-col gap-6 p-4 md:p-8 max-w-5xl mx-auto w-full print:p-0 print:max-w-none">
+
+        <main id="print-area"
+            class="flex flex-col gap-6 p-4 md:p-8 max-w-5xl mx-auto w-full print:p-0 print:max-w-none">
 
             <header class="flex justify-between items-center print:hidden pb-6 border-b">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-foreground">Reportes y Métricas</h1>
-                    <p class="text-muted-foreground text-sm mt-1">Genera informes impresos o PDF de la actividad del repositorio.</p>
+                    <p class="text-muted-foreground text-sm mt-1">Genera informes impresos o PDF de la actividad del
+                        repositorio.</p>
                 </div>
                 <Button @click="printReport" class="shadow-sm">
                     <Printer class="mr-2 h-4 w-4" aria-hidden="true" />
@@ -50,15 +53,19 @@ const printReport = () => {
                 </Button>
             </header>
 
-            <article class="bg-card border rounded-xl p-8 shadow-sm print:border-0 print:shadow-none print:p-0 print:bg-white">
+            <article
+                class="bg-card border rounded-xl p-8 shadow-sm print:border-0 print:shadow-none print:p-0 print:bg-white">
 
                 <div class="text-center mb-10 border-b pb-6 print:mb-6">
                     <div class="flex items-center justify-center gap-3 mb-2 opacity-50">
                         <FileBarChart class="h-8 w-8" aria-hidden="true" />
                     </div>
-                    <h2 class="text-xl font-bold uppercase tracking-widest text-foreground print:text-black">Instituto Universitario Jesús Obrero</h2>
-                    <h3 class="text-lg font-medium text-muted-foreground print:text-black">Informe de Gestión de Tesis</h3>
-                    <p class="text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1 print:text-black">
+                    <h2 class="text-xl font-bold uppercase tracking-widest text-foreground print:text-black">Instituto
+                        Universitario Jesús Obrero</h2>
+                    <h3 class="text-lg font-medium text-muted-foreground print:text-black">Informe de Gestión de Tesis
+                    </h3>
+                    <p
+                        class="text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1 print:text-black">
                         <Calendar class="h-3 w-3" aria-hidden="true" />
                         Generado el: <time :datetime="new Date().toISOString()">{{ fecha }}</time>
                     </p>
@@ -66,10 +73,10 @@ const printReport = () => {
 
                 <section aria-labelledby="stats-heading" class="mb-10 print:mb-6">
                     <h4 id="stats-heading" class="text-lg font-bold mb-4 flex items-center gap-2 print:text-black">
-                        <FileBarChart class="h-5 w-5 text-muted-foreground print:text-black" aria-hidden="true" /> 
+                        <FileBarChart class="h-5 w-5 text-muted-foreground print:text-black" aria-hidden="true" />
                         Resumen por Carrera
                     </h4>
-                    
+
                     <div class="rounded-md border overflow-hidden print:border-black">
                         <table class="w-full text-sm text-left">
                             <caption class="sr-only">Estadísticas de tesis aprobadas y pendientes por carrera</caption>
@@ -77,8 +84,10 @@ const printReport = () => {
                                 <tr>
                                     <th scope="col" class="p-3 print:text-black">Carrera</th>
                                     <th scope="col" class="p-3 text-center print:text-black">Total Registros</th>
-                                    <th scope="col" class="p-3 text-center text-green-700 print:text-black">Aprobadas</th>
-                                    <th scope="col" class="p-3 text-center text-orange-600 print:text-black">Pendientes</th>
+                                    <th scope="col" class="p-3 text-center text-green-700 print:text-black">Aprobadas
+                                    </th>
+                                    <th scope="col" class="p-3 text-center text-orange-600 print:text-black">Pendientes
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y print:divide-black">
@@ -92,9 +101,12 @@ const printReport = () => {
                             <tfoot class="bg-muted/20 font-semibold border-t print:border-black">
                                 <tr>
                                     <td class="p-3 print:text-black">TOTALES</td>
-                                    <td class="p-3 text-center print:text-black">{{ stats.reduce((acc, s) => acc + s.total, 0) }}</td>
-                                    <td class="p-3 text-center print:text-black">{{ stats.reduce((acc, s) => acc + s.aprobadas, 0) }}</td>
-                                    <td class="p-3 text-center print:text-black">{{ stats.reduce((acc, s) => acc + s.pendientes, 0) }}</td>
+                                    <td class="p-3 text-center print:text-black">{{stats.reduce((acc, s) => acc +
+                                        s.total, 0)}}</td>
+                                    <td class="p-3 text-center print:text-black">{{stats.reduce((acc, s) => acc +
+                                        s.aprobadas, 0)}}</td>
+                                    <td class="p-3 text-center print:text-black">{{stats.reduce((acc, s) => acc +
+                                        s.pendientes, 0)}}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -106,7 +118,7 @@ const printReport = () => {
                         <FileText class="h-5 w-5 text-muted-foreground print:text-black" aria-hidden="true" />
                         Últimas Tesis Aprobadas
                     </h4>
-                    
+
                     <div class="rounded-md border overflow-hidden print:border-black">
                         <table class="w-full text-sm text-left">
                             <caption class="sr-only">Listado de las últimas tesis aprobadas</caption>
@@ -130,14 +142,16 @@ const printReport = () => {
                                     <td class="p-3 text-xs print:text-black">{{ item.carrera?.nombre }}</td>
                                 </tr>
                                 <tr v-if="listado.length === 0">
-                                    <td colspan="4" class="p-6 text-center text-muted-foreground">No hay registros recientes.</td>
+                                    <td colspan="4" class="p-6 text-center text-muted-foreground">No hay registros
+                                        recientes.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <footer class="mt-12 pt-4 border-t text-center text-xs text-muted-foreground print:text-black print:mt-auto print:pt-8 print:border-black">
+                <footer
+                    class="mt-12 pt-4 border-t text-center text-xs text-muted-foreground print:text-black print:mt-auto print:pt-8 print:border-black">
                     <p>Documento generado automáticamente por el sistema de Repositorio Digital IUJO.</p>
                 </footer>
 
@@ -148,21 +162,24 @@ const printReport = () => {
 
 <style>
 @media print {
+
     /* 1. Configuración base de la hoja */
     @page {
-        margin: 0; /* Dejamos el margen de hoja en 0 para controlarlo nosotros con padding */
+        margin: 0;
         size: auto;
     }
 
     /* 2. Ocultar todo lo demás */
-    body, body * {
+    body,
+    body * {
         visibility: hidden !important;
         height: auto !important;
         overflow: visible !important;
     }
 
     /* 3. Hacer visible el reporte */
-    #print-area, #print-area * {
+    #print-area,
+    #print-area * {
         visibility: visible !important;
     }
 
@@ -174,15 +191,8 @@ const printReport = () => {
         width: 100vw !important;
         min-height: 100vh !important;
         margin: 0 !important;
-        
-        /* --- AQUÍ ESTÁ EL CAMBIO --- */
-        /* Padding interno para simular márgenes de hoja */
-        /* 2.5cm a los lados es un estándar cómodo para lectura */
-        padding: 1cm 2.5cm !important; 
-        
-        /* Asegura que el padding esté DENTRO del 100% de ancho y no se desborde */
-        box-sizing: border-box !important; 
-        /* --------------------------- */
+        padding: 1cm 2.5cm !important;
+        box-sizing: border-box !important;
 
         background-color: white !important;
         z-index: 99999 !important;
@@ -194,7 +204,7 @@ const printReport = () => {
         width: 100% !important;
         border-collapse: collapse !important;
     }
-    
+
     tr {
         break-inside: avoid;
         page-break-inside: avoid;
